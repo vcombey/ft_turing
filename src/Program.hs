@@ -1,6 +1,8 @@
 
 data Direction = Left | Right deriving Show
 
+data State = String
+
 data Transition = Transition {
   read :: Char
   , toState :: String
@@ -8,18 +10,18 @@ data Transition = Transition {
   , action :: Direction
 } deriving Show
 
-data TuringMachine = TuringMachine {
+data Program = Program {
     name :: String
     , alphabet :: [Char]
     , blank :: Char
-    , states :: [String]
-    , initial :: String
-    , finals :: String
-    , transitions :: [(String, [Transition])]
+    , states :: [State]
+    , initial :: State
+    , finals :: State
+    , transitions :: [(State, [Transition])]
 } deriving Show
 
-new :: TuringMachine
-new = TuringMachine {
+new :: Program
+new = Program {
         name = "unary_sub"
         , alphabet = [ '1', '.', '-', '=' ]
         , blank = '.'
@@ -48,7 +50,8 @@ new = TuringMachine {
             ]
         }
 
-check :: TuringMachine -> Bool
+--Check that the program is well formed
+check :: Program -> Bool
 check t =
     belongToStates (initial t)
     && belongToStates (finals t)
@@ -61,6 +64,7 @@ check t =
                                         && all (belongToAlphabet . Machine.read) trans
                                         && all (belongToAlphabet . Machine.write) trans
 
-getTransition :: Program -> State -> Maybe Transition
-getTransition p s = find (\x -> x == s)  (transitions p)
-  >>= (\(_, list_transition) -> find (\x -> x
+--From a program a state a a letter read in the tape get the corresponding transition
+getTransition :: Program -> State -> Char -> Maybe Transition
+getTransition p letter s = find (\(n, _) -> n == s) (transitions p)
+  >>= \(_, list_transition) -> find (\x -> x == letter) list_transition
