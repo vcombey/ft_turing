@@ -1,10 +1,9 @@
 module Main where
 
 import qualified Data.Map as Map
-import Machine 
+import Program 
 
 main :: IO ()
 main = putStrLn (show t)
-       >> putStrLn (show $ Machine.check t)
-       >> putStrLn (show $ Map.singleton 0 'a')
-    where t = Machine.new
+       >> putStrLn (show $ Program.check t)
+    where t = Program.new

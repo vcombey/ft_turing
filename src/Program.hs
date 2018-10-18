@@ -1,7 +1,14 @@
+module Program
+  (
+    Program
+  , new
+  , check
+  )
+  where 
 
 data Direction = Left | Right deriving Show
 
-data State = String
+type State = String
 
 data Transition = Transition {
   read :: Char
@@ -30,22 +37,22 @@ new = Program {
         , finals = "HALT"
         , transitions = [
             ("scanright", [
-                Transition { Machine.read= '.', toState= "scanright", write= '.', action= Machine.Right},
-                Transition { Machine.read= '1', toState= "scanright", write= '1', action= Machine.Right},
-                Transition { Machine.read= '-', toState= "scanright", write= '-', action= Machine.Right},
-                Transition { Machine.read= '=', toState= "eraseone" , write= '.', action= Machine.Left }
+                Transition { Program.read= '.', toState= "scanright", write= '.', action= Program.Right},
+                Transition { Program.read= '1', toState= "scanright", write= '1', action= Program.Right},
+                Transition { Program.read= '-', toState= "scanright", write= '-', action= Program.Right},
+                Transition { Program.read= '=', toState= "eraseone" , write= '.', action= Program.Left }
             ]),
             ("eraseone", [
-                Transition { Machine.read= '1', toState= "subone", write= '=', action= Machine.Left},
-                Transition { Machine.read= '-', toState= "HALT"  , write= '.', action= Machine.Left}
+                Transition { Program.read= '1', toState= "subone", write= '=', action= Program.Left},
+                Transition { Program.read= '-', toState= "HALT"  , write= '.', action= Program.Left}
             ]),
             ("subone", [
-                Transition { Machine.read= '1', toState= "subone", write= '1', action= Machine.Left},
-                Transition { Machine.read= '-', toState= "skip"  , write= '-', action= Machine.Left}
+                Transition { Program.read= '1', toState= "subone", write= '1', action= Program.Left},
+                Transition { Program.read= '-', toState= "skip"  , write= '-', action= Program.Left}
             ]),
             ("skip", [
-                Transition { Machine.read= '.', toState= "skip" , write= '.', action= Machine.Left},
-                Transition { Machine.read= '1', toState= "scanright", write= '.', action= Machine.Right}
+                Transition { Program.read= '.', toState= "skip" , write= '.', action= Program.Left},
+                Transition { Program.read= '1', toState= "scanright", write= '.', action= Program.Right}
             ])
             ]
         }
@@ -61,10 +68,11 @@ check t =
           belongToAlphabet s = elem s (alphabet t)
           checkTransition (n, trans) = belongToStates n
                                         && all (belongToStates . toState) trans
-                                        && all (belongToAlphabet . Machine.read) trans
-                                        && all (belongToAlphabet . Machine.write) trans
+                                        && all (belongToAlphabet . Program.read) trans
+                                        && all (belongToAlphabet . Program.write) trans
 
 --From a program a state a a letter read in the tape get the corresponding transition
-getTransition :: Program -> State -> Char -> Maybe Transition
+{-getTransition :: Program -> State -> Char -> Maybe Transition
 getTransition p letter s = find (\(n, _) -> n == s) (transitions p)
   >>= \(_, list_transition) -> find (\x -> x == letter) list_transition
+-}
