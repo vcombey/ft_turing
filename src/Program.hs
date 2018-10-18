@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 module Program
   (
     Program
@@ -5,6 +6,8 @@ module Program
   , check
   )
   where 
+
+import GHC.Generics
 
 data Direction = Left | Right deriving Show
 
@@ -15,7 +18,7 @@ data Transition = Transition {
   , toState :: String
   , write :: Char
   , action :: Direction
-} deriving Show
+} deriving (Show, Generic)
 
 data Program = Program {
     name :: String
@@ -25,7 +28,7 @@ data Program = Program {
     , initial :: State
     , finals :: State
     , transitions :: [(State, [Transition])]
-} deriving Show
+} deriving (Show, Generic)
 
 new :: Program
 new = Program {
