@@ -11,7 +11,7 @@ module Tape
   where 
 
 import qualified Data.Map as IntMap
-import Program (Symbol)
+import Program hiding (check)
 
 type Cell = Int
 type Tape = IntMap.Map Cell Symbol
@@ -33,5 +33,5 @@ prettyTape t blank cell =
     concat (IntMap.elems new_tape)
 
 -- take a tape and the alphabet and check if all Cell belongs to alphabet
-check :: Tape -> [String] -> Bool
-check t alphabet = all (`elem` alphabet)  (IntMap.elems t)
+check :: Tape -> Program -> Bool
+check t p = all (\x -> x `elem` Program.alphabet p && x /= Program.blank p)  (IntMap.elems t)

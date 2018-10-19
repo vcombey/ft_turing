@@ -13,7 +13,7 @@ start file input = ((decodeFileStrict file) :: IO (Maybe Program.Program)) >>=
          Just program -> 
            let tape = Tape.fromString input in
            if not (Program.check program) then putStrLn "parsing error"
-           else if not (Tape.check tape (Program.alphabet program)) then putStrLn "all char in initial tape don't belongs to alphabet"
+           else if not (Tape.check tape program) then putStrLn "all char in initial tape don't belongs to (alphabet \\ blank)"
            else (putStrLn (Program.prettyProgram program) >> putStrLn (show $ Program.check program) >>
            putStrLn (Machine.prettyOutput (Machine.execute tape program) program))
          Nothing -> putStrLn "parsing error"
