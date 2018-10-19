@@ -5,10 +5,27 @@ import Program
 import Machine 
 import Tape 
 import Data.Aeson
+import System.Environment
+import System.Exit
 
-main :: IO ()
-main = ((decodeFileStrict "ressources/program.json") :: IO (Maybe Program)) >>=
+start file input = ((decodeFileStrict file) :: IO (Maybe Program)) >>=
        \decoded -> case decoded of
          Just program -> putStrLn (show program) >> putStrLn (show $ Program.check program) >>
-           putStrLn (show $ Machine.execute (Tape.fromString "111-11=") program)
+           putStrLn (show $ Machine.execute (Tape.fromString input) program)
          Nothing -> putStrLn "parsing error"
+
+main :: IO ()
+main = getArgs >>= parse
+ 
+parse x | x == ["-h"] || x == ["--help"] = usage >> exitWith ExitSuccess
+parse []     = usage >> exitWith (ExitFailure 1)
+parse (_:[]) = usage >> exitWith (ExitFailure 1)
+parse (file:input:[]) = start file input
+
+usage   = putStrLn "Usage ft_turing [-h] jsonfile input\n\
+                    \positional arguments:\n\
+                    \jsonfile              json description of the machine\n\
+                    \input                 input of the machine\n\
+                    \optional arguments:\n\
+                    \-h, --help            show this help message and exit\n"
+
