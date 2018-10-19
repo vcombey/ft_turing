@@ -23,6 +23,8 @@ dependencies:
 - base >= 4.7 && < 5
 - containers
 - aeson
+- unordered-containers
+- text
 
 library:
   source-dirs: src

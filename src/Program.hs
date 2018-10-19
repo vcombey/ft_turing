@@ -13,28 +13,35 @@ module Program
 import GHC.Generics
 import Data.Aeson
 import Data.List
+import Data.Text  (unpack)
+import Data.HashMap.Strict
 
 data Direction = Left | Right deriving (Show, Generic)
-instance FromJSON Direction
 
+instance FromJSON Direction where
+  parseJSON = withText "Direction" $ \s -> case unpack s of
+    "LEFT" -> return Program.Left
+    "RIGHT" -> return Program.Right
+  
 type State = String
+type Symbol = String
 
 data Transition = Transition {
-  read :: Char
-  , toState :: String
-  , write :: Char
+  read :: Symbol
+  , to_state :: State
+  , write :: Symbol
   , action :: Direction
 } deriving (Show, Generic)
 instance FromJSON Transition
 
 data Program = Program {
     name :: String
-    , alphabet :: [Char]
-   {--  , blank :: Char
+    , alphabet :: [Symbol]
+     , blank :: Symbol
     , states :: [State]
     , initial :: State
     , finals :: [State]
-   , transitions :: [(State, [Transition])] --}
+   , transitions :: HashMap State [Transition]
 } deriving (Show, Generic)
 instance FromJSON Program
 {--
