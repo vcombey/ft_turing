@@ -5,7 +5,7 @@ import Program
 import Data.Aeson
 
 main :: IO ()
-main = ((decodeFileStrict "program.json") :: IO (Maybe Program)) >>=
+main = ((decodeFileStrict "ressources/program.json") :: IO (Maybe Program)) >>=
        \decoded -> putStrLn (show decoded)
       {-- >> putStrLn (show $ Program.check t) --}
     --where t = Program.new
