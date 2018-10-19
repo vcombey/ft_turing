@@ -19,14 +19,15 @@ data Step = Step {
 
 data Output = 
    Blocked ([Step], Tape, Cell)
-  | Halt [Step] 
+  | Halt ([Step], Tape, Cell)
+ 
  deriving Show
 
 
 execute :: Tape -> Program.Program -> Output
 execute tape program =
   aux tape program 0 (initial program) []
-  where aux tape program cell state acc_step = if state `elem` (finals program) then Halt acc_step
+  where aux tape program cell state acc_step = if state `elem` (finals program) then Halt (acc_step, tape, cell)
         else (let curr_symb = readSymbol cell (blank program) tape in
             case getTransition program state curr_symb of
             Nothing -> Blocked (acc_step, tape, cell)
