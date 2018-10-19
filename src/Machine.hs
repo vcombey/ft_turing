@@ -36,15 +36,15 @@ prettyOutputAux (steps, tape, cell) p =
    
 
 prettyOutput :: Output -> Program -> String
-prettyOutput (Blocked x) p =  prettyOutputAux x p ++ "The Turing Machine had Segmentation Fault\n" 
-prettyOutput (Halt x) p =  prettyOutputAux x p ++ "The Turing Machine had Success\n"
+prettyOutput (Blocked x) p =  prettyOutputAux x p ++ "\n" ++ "The Turing Machine had Segmentation Fault\n" 
+prettyOutput (Halt x) p =  prettyOutputAux x p ++ "\n" ++ "The Turing Machine Succeed\n"
 
     
 
 execute :: Tape -> Program.Program -> Output
 execute tape program =
   aux tape program 0 (initial program) []
-  where aux tape program cell state acc_step = if state `elem` (finals program) then Halt (acc_step, tape, cell)
+  where aux tape program cell state acc_step = if state `elem` (finals program) then Halt (reverse acc_step, tape, cell)
         else (let curr_symb = readSymbol cell (blank program) tape in
             case getTransition program state curr_symb of
             Nothing -> Blocked (acc_step, tape, cell)

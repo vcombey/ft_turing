@@ -11,7 +11,7 @@ import System.Exit
 start file input = ((decodeFileStrict file) :: IO (Maybe Program)) >>=
        \decoded -> case decoded of
          Just program -> putStrLn (prettyProgram program) >> putStrLn (show $ Program.check program) >>
-           putStrLn (prettyOutput $ Machine.execute (Tape.fromString input) program)
+           putStrLn (prettyOutput (Machine.execute (Tape.fromString input) program) program)
          Nothing -> putStrLn "parsing error"
 
 main :: IO ()
