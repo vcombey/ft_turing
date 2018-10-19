@@ -4,22 +4,23 @@ module Tape
   , Tape
   , readSymbol
   , putSymbol
+  , fromString
   )
   where 
 
 import qualified Data.Map as IntMap
+import Program
 
 type Cell = Int
-type Tape = IntMap.Map Int Char
+type Tape = IntMap.Map Cell Symbol
 
-readSymbol :: Cell -> Tape -> Maybe Char
-readSymbol cell tape = IntMap.lookup cell tape
+readSymbol :: Cell -> Symbol -> Tape -> Symbol
+readSymbol cell blank tape = case IntMap.lookup cell tape of
+  Nothing -> blank
+  Just s -> s
 
-putSymbol :: Cell -> Char -> Tape -> Tape
+putSymbol :: Cell -> Symbol -> Tape -> Tape
 putSymbol cell symbol tape = IntMap.insert cell symbol tape
 
-{--
-fromInitialState :: String -> Tape
-fromInitialState = fold (\acc \symb \i -> putSymbol i symb acc) IntMap.empty
---}
-
+fromString :: String -> Tape
+fromString s = IntMap.fromList $ zip [0..] (map (\x -> [x]) s)
