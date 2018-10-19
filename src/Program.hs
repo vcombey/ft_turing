@@ -2,14 +2,20 @@
 module Program
   (
     Program
-  , new
-  , check
+  , Direction (..)
+  , Transition
+  , State
+ {-- , new
+  , check --}
   )
   where 
 
 import GHC.Generics
+import Data.Aeson
+import Data.List
 
-data Direction = Left | Right deriving Show
+data Direction = Left | Right deriving (Show, Generic)
+instance FromJSON Direction
 
 type State = String
 
@@ -19,17 +25,19 @@ data Transition = Transition {
   , write :: Char
   , action :: Direction
 } deriving (Show, Generic)
+instance FromJSON Transition
 
 data Program = Program {
     name :: String
     , alphabet :: [Char]
-    , blank :: Char
+   {--  , blank :: Char
     , states :: [State]
     , initial :: State
-    , finals :: State
-    , transitions :: [(State, [Transition])]
+    , finals :: [State]
+   , transitions :: [(State, [Transition])] --}
 } deriving (Show, Generic)
-
+instance FromJSON Program
+{--
 new :: Program
 new = Program {
         name = "unary_sub"
@@ -37,7 +45,7 @@ new = Program {
         , blank = '.'
         , states = [ "scanright", "eraseone", "subone", "skip", "HALT" ]
         , initial = "scanright"
-        , finals = "HALT"
+        , finals = ["HALT"]
         , transitions = [
             ("scanright", [
                 Transition { Program.read= '.', toState= "scanright", write= '.', action= Program.Right},
@@ -64,7 +72,7 @@ new = Program {
 check :: Program -> Bool
 check t =
     belongToStates (initial t)
-    && belongToStates (finals t)
+    && all belongToStates (finals t)
     && belongToAlphabet (blank t)
     && all (checkTransition) (transitions t)
     where belongToStates s = elem s (states t)
@@ -75,7 +83,8 @@ check t =
                                         && all (belongToAlphabet . Program.write) trans
 
 --From a program a state a a letter read in the tape get the corresponding transition
-{-getTransition :: Program -> State -> Char -> Maybe Transition
-getTransition p letter s = find (\(n, _) -> n == s) (transitions p)
-  >>= \(_, list_transition) -> find (\x -> x == letter) list_transition
--}
+getTransition :: Program -> State -> Char -> Maybe Transition
+getTransition p state symbol = find (\(s, _) -> s == state) (transitions p)
+  >>= \(_, list_transition) -> find (\x -> Program.read x == symbol) list_transition
+
+--}

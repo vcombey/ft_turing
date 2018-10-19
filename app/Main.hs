@@ -2,8 +2,10 @@ module Main where
 
 import qualified Data.Map as Map
 import Program 
+import Data.Aeson
 
 main :: IO ()
-main = putStrLn (show t)
-       >> putStrLn (show $ Program.check t)
-    where t = Program.new
+main = ((decodeFileStrict "program.json") :: IO (Maybe Program)) >>=
+       \decoded -> putStrLn (show decoded)
+      {-- >> putStrLn (show $ Program.check t) --}
+    --where t = Program.new

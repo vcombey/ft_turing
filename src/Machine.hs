@@ -1,28 +1,26 @@
 module Machine
   (
   ) where
-{-
 
 import Program
+import Tape
 
-type Cell = Int
 changeState :: Direction -> Cell -> Cell
-changeState Right i = i + 1
-changeState Left i = i - 1
+changeState Program.Right i = i + 1
+changeState Program.Left i = i - 1
 
 data MachineOutput = MachineOutput
   | Res Tape
   | Halt
 
 
-data Step = {
+data Step = Step {
     tape :: Tape
-    cell :: Cell
-    state :: State
-    transition :: Transition
+    , cell :: Cell
+    , state :: State
+    , transition :: Transition
 }
 
-execute :: Tape -> Program -> [Step] 
+--execute :: Tape -> Program -> [Step] 
 
 --PROGRAM
--}
