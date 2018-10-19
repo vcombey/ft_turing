@@ -25,11 +25,12 @@ parse x | x == ["-h"] || x == ["--help"] = usage >> exitWith ExitSuccess
 parse []     = usage >> exitWith (ExitFailure 1)
 parse (_:[]) = usage >> exitWith (ExitFailure 1)
 parse (file:input:[]) = start file input
+parse _     = usage >> exitWith (ExitFailure 1)
 
-usage = putStrLn "Usage ft_turing [-h] jsonfile input\n\
+usage = putStrLn "Usage ft_turing [-h] jsonfile input\n\n\
                     \positional arguments:\n\
                     \jsonfile              json description of the machine\n\
-                    \input                 input of the machine\n\
+                    \input                 input of the machine\n\n\
                     \optional arguments:\n\
                     \-h, --help            show this help message and exit\n"
 
