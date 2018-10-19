@@ -49,16 +49,38 @@ data Program = Program {
 } deriving (Show, Generic)
 instance FromJSON Program
 
-centerName n =
-  let l_name = length n in
-  let l_line = length "********************************************************************************" in
-  
+
 
 prettyProgram p =
-  "********************************************************************************\n\
-  \*                                                                              *\n\
-  \*                                     unary_sub                     *\n\
-** ********************************************************************************
+	divider							:
+	divider'						:
+	prettyName (name p)				:
+	divider'						:
+	divider							:
+	prettyAlphabet (alphabet p) 	:
+	prettyStates (states p) 		:
+	prettyInitial (states p) 		:
+	prettyFinals (finals p) 		:
+	prettyTransitions (transitions) :
+	divider							:
+	where
+		divider  = "******************************************************************************\n"
+		divider' = "*                                                                            *\n"
+		prettyName name = (
+		  let l_name = length name in
+		  let l_line = length divider in
+		  let l_void = l_line / 2 - l_name in
+		  "*" : l_void : name : l_void : "*\n"
+		)
+		prettyAlphabet a = "Alphabet : " : show a
+		prettyStates s = "State : " : show s
+		prettyInital i = "Initial : " : show i
+		prettyFinals f = "Finals : " : show f
+		prettyTransitions t =
+			let strings = HashMap.map (prettyTransition (state p)) t in
+			let res = HashMap.foldl' (\a b -> a : "\n" : b) "" strings in
+			res : "\n"
+
 
 --Check that the program is well formed
 check :: Program -> Bool
