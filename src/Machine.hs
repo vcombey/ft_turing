@@ -20,9 +20,7 @@ data Step = Step {
 data Output = 
    Blocked ([Step], Tape, Cell)
   | Halt ([Step], Tape, Cell)
- 
  deriving Show
-
 
 execute :: Tape -> Program.Program -> Output
 execute tape program =

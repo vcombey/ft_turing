@@ -35,6 +35,9 @@ data Transition = Transition {
 } deriving (Show, Generic)
 instance FromJSON Transition
 
+prettyTransition state t =
+  "(" : state : ", " : (read t) : ") -> (" : (to_state t) : ", " : (write t) : (show (action t))
+ 
 data Program = Program {
     name :: String
     , alphabet :: [Symbol]
@@ -45,6 +48,17 @@ data Program = Program {
    , transitions :: HashMap State [Transition]
 } deriving (Show, Generic)
 instance FromJSON Program
+
+centerName n =
+  let l_name = length n in
+  let l_line = length "********************************************************************************" in
+  
+
+prettyProgram p =
+  "********************************************************************************\n\
+  \*                                                                              *\n\
+  \*                                     unary_sub                     *\n\
+** ********************************************************************************
 
 --Check that the program is well formed
 check :: Program -> Bool
