@@ -1,5 +1,5 @@
 {
-	"name"    : "unary_sub",
+	"name"    : "ssssssssssssssssssss",
 	"alphabet": [ "1", ".", "-", "=" ],
 	"blank"   : ".",
 	"states"  : [ "scanright", "eraseone", "subone", "skip", "HALT" ],

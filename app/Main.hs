@@ -10,8 +10,8 @@ import System.Exit
 
 start file input = ((decodeFileStrict file) :: IO (Maybe Program)) >>=
        \decoded -> case decoded of
-         Just program -> putStrLn (show program) >> putStrLn (show $ Program.check program) >>
-           putStrLn (show $ Machine.execute (Tape.fromString input) program)
+         Just program -> putStrLn (prettyProgram program) >> putStrLn (show $ Program.check program) >>
+           putStrLn (prettyOutput $ Machine.execute (Tape.fromString input) program)
          Nothing -> putStrLn "parsing error"
 
 main :: IO ()
@@ -22,7 +22,7 @@ parse []     = usage >> exitWith (ExitFailure 1)
 parse (_:[]) = usage >> exitWith (ExitFailure 1)
 parse (file:input:[]) = start file input
 
-usage   = putStrLn "Usage ft_turing [-h] jsonfile input\n\
+usage = putStrLn "Usage ft_turing [-h] jsonfile input\n\
                     \positional arguments:\n\
                     \jsonfile              json description of the machine\n\
                     \input                 input of the machine\n\

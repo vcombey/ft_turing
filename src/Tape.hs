@@ -5,6 +5,7 @@ module Tape
   , readSymbol
   , putSymbol
   , fromString
+  , prettyTape
   )
   where 
 
@@ -24,3 +25,8 @@ putSymbol cell symbol tape = IntMap.insert cell symbol tape
 
 fromString :: String -> Tape
 fromString s = IntMap.fromList $ zip [0..] (map (\x -> [x]) s)
+
+prettyTape ::  Tape -> Symbol -> Cell-> String
+prettyTape t blank cell =
+  let new_tape = putSymbol cell ("<" ++ readSymbol cell blank t ++ ">") t in
+    concat (IntMap.elems new_tape)
