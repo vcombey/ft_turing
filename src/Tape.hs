@@ -6,11 +6,12 @@ module Tape
   , putSymbol
   , fromString
   , prettyTape
+  , check
   )
   where 
 
 import qualified Data.Map as IntMap
-import Program
+import Program (Symbol)
 
 type Cell = Int
 type Tape = IntMap.Map Cell Symbol
@@ -30,3 +31,7 @@ prettyTape ::  Tape -> Symbol -> Cell-> String
 prettyTape t blank cell =
   let new_tape = putSymbol cell ("<" ++ readSymbol cell blank t ++ ">") t in
     concat (IntMap.elems new_tape)
+
+-- take a tape and the alphabet and check if all Cell belongs to alphabet
+check :: Tape -> [String] -> Bool
+check t alphabet = all (`elem` alphabet)  (IntMap.elems t)

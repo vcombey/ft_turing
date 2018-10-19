@@ -1,17 +1,21 @@
 module Main where
 
 import qualified Data.Map as Map
-import Program 
-import Machine 
-import Tape 
+import qualified Program 
+import qualified Machine 
+import qualified Tape 
 import Data.Aeson
 import System.Environment
 import System.Exit
 
-start file input = ((decodeFileStrict file) :: IO (Maybe Program)) >>=
+start file input = ((decodeFileStrict file) :: IO (Maybe Program.Program)) >>=
        \decoded -> case decoded of
-         Just program -> putStrLn (prettyProgram program) >> putStrLn (show $ Program.check program) >>
-           putStrLn (prettyOutput (Machine.execute (Tape.fromString input) program) program)
+         Just program -> 
+           let tape = Tape.fromString input in
+           if not (Program.check program) then putStrLn "parsing error"
+           else if not (Tape.check tape (Program.alphabet program)) then putStrLn "all char in initial tape don't belongs to alphabet"
+           else (putStrLn (Program.prettyProgram program) >> putStrLn (show $ Program.check program) >>
+           putStrLn (Machine.prettyOutput (Machine.execute tape program) program))
          Nothing -> putStrLn "parsing error"
 
 main :: IO ()
