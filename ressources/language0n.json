@@ -8,7 +8,6 @@
 	"transitions" : {
 		"scan": [
 			{ "read" : "0", "to_state": "scanright_a", "write": ".", "action": "RIGHT"},
-			{ "read" : "0", "to_state": "scanright_a", "write": ".", "action": "RIGHT"},
 			{ "read" : ".", "to_state": "yes", "write": ".", "action": "RIGHT"}
 		],
 		"back": [
