@@ -14,8 +14,7 @@ start file input = ((decodeFileStrict file) :: IO (Maybe Program.Program)) >>=
            let tape = Tape.fromString input in
            if not (Program.check program) then putStrLn "parsing error"
            else if not (Tape.check tape program) then putStrLn "all char in initial tape don't belongs to (alphabet \\ blank)"
-           else (putStrLn (Program.prettyProgram program) >>
-           putStrLn (Machine.prettyOutput (Machine.execute tape program) program))
+           else putStrLn (Program.prettyProgram program) >> Machine.execute tape program
          Nothing -> putStrLn "parsing error"
 
 main :: IO ()
