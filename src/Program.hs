@@ -93,13 +93,16 @@ prettyProgram p =
 
 
 --Check that the program is well formed
-check :: Program -> Bool
+check :: Program -> Either String ()
 check t =
-    belongToStates (initial t)
-    && List.all (\x -> length x == 1) (alphabet t)
-    && List.all belongToStates (finals t)
-    && belongToAlphabet (blank t)
-    && List.all (checkTransition) (toList $ transitions t)
+    if not (belongToStates (initial t)) then Prelude.Left ("Initial don't belong to states")
+    else if not (List.all (\x -> length x == 1) (alphabet t)) then Prelude.Left ("All Symbol are not Characters")
+    else if not (List.all belongToStates (finals t)) then Prelude.Left ("All finals don't belong to states")
+    else if not (belongToAlphabet (blank t)) then Prelude.Left ("blank dont belong to alphabet")
+    else
+      case (List.find (not . checkTransition) (toList $ transitions t)) of
+        Just invalid_trans -> Prelude.Left ("Transition not valable" ++ (show invalid_trans))
+        Nothing -> Prelude.Right ()
     where belongToStates s = elem s (states t)
           belongToAlphabet s = elem s (alphabet t)
           checkTransition (n, trans) = belongToStates n

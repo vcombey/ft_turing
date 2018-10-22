@@ -15,9 +15,9 @@ start file input = ((decodeFileStrict file) :: IO (Maybe Program.Program)) >>=
        \decoded -> case decoded of
          Just program -> 
            let tape = Tape.fromString input in
-           if not (Program.check program) then putStrLn "bad program"
-           else if not (Tape.check tape program) then putStrLn "all char in initial tape don't belongs to (alphabet \\ blank)"
-           else putStrLn (Program.prettyProgram program) >> Machine.execute tape program
+           case (Program.check program) of
+             Left (mess) -> (putStrLn (Program.prettyProgram program) >> putStrLn ("bad program: " ++ mess))
+             Right () -> if not (Tape.check tape program) then putStrLn "all char in initial tape don't belongs to (alphabet \\ blank)" else putStrLn (Program.prettyProgram program) >> Machine.execute tape program
          Nothing -> putStrLn "parsing error"
 
 main :: IO ()
