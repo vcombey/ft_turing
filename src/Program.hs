@@ -19,12 +19,13 @@ import qualified Data.List as List
 import Data.Text  (unpack)
 import Data.HashMap.Strict as HashMap
 
-data Direction = Left | Right deriving (Show, Generic)
+data Direction = Left | Right | None deriving (Show, Generic)
 
 instance FromJSON Direction where
   parseJSON = withText "Direction" $ \s -> case unpack s of
     "LEFT" -> return Program.Left
     "RIGHT" -> return Program.Right
+    "NONE" -> return Program.None
   
 type State = String
 type Symbol = String

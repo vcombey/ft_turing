@@ -1,0 +1,28 @@
+{
+	"transitions":
+	{"4":[
+		{"read":"0","write":"0","to_state":"0","action":"NONE"}
+		,{"read":".","write":"0","to_state":"1","action":"RIGHT"}
+		,{"read":"e","write":"e","to_state":"3","action":"RIGHT"}
+		,{"read":"1","write":"1","to_state":"3","action":"RIGHT"}
+	],
+	 "2":[
+		 {"read":"e","write":"e","to_state":"3","action":"LEFT"}
+		 ,{"read":"0","write":"0","to_state":"2","action":"LEFT"}
+		 ,{"read":"1","write":"1","to_state":"2","action":"LEFT"}
+		 ,{"read":".","write":".","to_state":"2","action":"LEFT"}
+	 ],
+	 "3":[
+		 {"read":"0","write":"0","to_state":"0","action":"NONE"}
+		 ,{"read":".","write":"0","to_state":"4","action":"RIGHT"}
+		 ,{"read":"e","write":"e","to_state":"3","action":"RIGHT"}
+		 ,{"read":"1","write":"1","to_state":"3","action":"RIGHT"}
+	 ]}
+	,"states":["0","1","2","3","4"],
+	"blank":".",
+	"finals":[],
+	"name":"Turingception",
+	"alphabet":["e","0","1","."],
+	"initial":"2"
+}
+
