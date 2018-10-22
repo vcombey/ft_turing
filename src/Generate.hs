@@ -62,13 +62,25 @@ transition_state first_state final_state =
 --                    ++ (not_letter [alpha, globalBlank] (newTransition "" "" Program.Right (first_state + 1) )))
 
 
-find_first :: Symbol -> [Symbol] -> StateInt -> StateInt -> StateInt -> Machine
-find_first alpha until found_state not_found_state first_state =
+find_first_until :: Direction -> Symbol -> [Symbol] -> StateInt -> StateInt -> StateInt -> Machine
+find_first_until dir alpha until found_state not_found_state first_state =
     HashMap.empty &
     HashMap.insert (show (first_state))
             ([(newTransition alpha alpha None found_state)]
             ++ (for_letter until (newTransition "" "" Program.None not_found_state))
-            ++ not_letter (until ++ [alpha]) (newTransition "" "" Program.Right (first_state)))
+            ++ not_letter (until ++ [alpha]) (newTransition "" "" dir (first_state)))
+
+find_first :: Direction -> Symbol -> StateInt -> StateInt -> Machine
+find_first dir alpha found_state first_state = find_first_until dir alpha [] found_state found_state first_state
+
+replace_first_until :: Direction -> Symbol -> Symbol -> [Symbol] -> StateInt -> StateInt -> StateInt -> Machine
+replace_first_until dir alpha beta until found_state not_found_state first_state =
+    transition_state first_state (first_state + 2) &
+    union (find_first_until dir alpha until (first_state + 1) not_found_state (first_state + 2)) &
+    HashMap.insert (show (first_state + 1))
+            ([(newTransition alpha beta None found_state)]
+            ++ not_letter ([alpha]) (newTransition "" "" dir (not_found_state)))
+
 
 --erase :: StateInt -> StateInt -> Symbol -> StateInt -> Machine
 --erase c b alpha first_state = 
@@ -89,7 +101,8 @@ find_first alpha until found_state not_found_state first_state =
 --    find first_state b "1" (first_state + 1) &
 
 universal = 
-  let trans = find_first "0" [] 0 1 2 in
+--  let trans = find_first_until Program.Right "X" [] 0 1 2 in
+    let trans = replace_first_until Program.Right "X" "B" [] 0 1 2 in
    Program {
         name="Turing'ception"
         , alphabet = globalAlphabet
