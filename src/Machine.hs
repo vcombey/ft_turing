@@ -10,6 +10,7 @@ import Tape
 changeCell :: Direction -> Cell -> Cell
 changeCell Program.Right i = i + 1
 changeCell Program.Left i = i - 1
+changeCell Program.None i = i
 
 data Step = Step {
     tape :: Tape
