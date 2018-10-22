@@ -10,6 +10,7 @@
 			{ "read" : "X", "to_state": "start_at_Y", "write": "X", "action": "RIGHT"},
 			{ "read" : "1", "to_state": "start_at_Y", "write": "1", "action": "RIGHT"},
 			{ "read" : "0", "to_state": "start_at_Y", "write": "0", "action": "RIGHT"},
+			{ "read" : ".", "to_state": "start_at_Y", "write": ".", "action": "RIGHT"},
 			{ "read" : "Y", "to_state": "check_adjacent_Y", "write": "Y", "action": "RIGHT"}
 		],
 		"check_adjacent_Y": [
@@ -55,6 +56,7 @@
 			{ "read" : "X", "to_state": "go_to_Y", "write": "X", "action": "RIGHT"},
 			{ "read" : "1", "to_state": "go_to_Y", "write": "1", "action": "RIGHT"},
 			{ "read" : "0", "to_state": "go_to_Y", "write": "0", "action": "RIGHT"},
+			{ "read" : ".", "to_state": "go_to_Y", "write": ".", "action": "RIGHT"},
 			{ "read" : "Y", "to_state": "shift_right_1", "write": "Y", "action": "RIGHT"}
 		],
 		"shift_right_1": [
