@@ -24,6 +24,7 @@ main :: IO ()
 main = getArgs >>= parse
  
 parse x | x == ["-h"] || x == ["--help"] = usage >> exitWith ExitSuccess
+parse x | x == ["-u"] || x == ["--universal"] = Main.universal
 parse []     = usage >> exitWith (ExitFailure 1)
 parse (_:[]) = usage >> exitWith (ExitFailure 1)
 parse (file:input:[]) = start file input

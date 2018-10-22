@@ -30,6 +30,7 @@ instance FromJSON Direction where
   parseJSON = withText "Direction" $ \s -> case unpack s of
     "LEFT" -> return Program.Left
     "RIGHT" -> return Program.Right
+    "NONE" -> return Program.None
   
 type State = String
 type Symbol = String
