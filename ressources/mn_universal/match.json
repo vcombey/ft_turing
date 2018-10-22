@@ -2,7 +2,7 @@
 	"name"    : "matcha",
 	"alphabet": [ "1", "0", ".", "X", "Y", "B", "y", "n" ],
 	"blank"   : ".",
-	"states"  : [ "mark_1_X", "go_to_Y", "mark_1_Y", "go_to_X", "check_Y", "check_end_Y", "fail", "success", "HALT" ],
+	"states"  : [ "mark_1_X", "go_to_Y", "mark_1_Y", "go_to_X", "check_Y", "check_end_Y", "fail", "success", "reset_B_to_1", "end", "HALT" ],
 	"initial" : "mark_1_X",
 	"finals"  : [ "HALT" ],
 	"transitions" : {
@@ -47,10 +47,23 @@
 			{ "read" : "B", "to_state": "check_end_Y", "write": "B", "action": "RIGHT"}
 		],
 		"fail" : [
-			{ "read" : ".", "to_state": "HALT", "write": "n", "action": "RIGHT"}
+			{ "read" : ".", "to_state": "reset_B_to_1", "write": "n", "action": "LEFT"}
 		],
 		"success" : [
-			{ "read" : ".", "to_state": "HALT", "write": "y", "action": "RIGHT"}
+			{ "read" : ".", "to_state": "reset_B_to_1", "write": "y", "action": "LEFT"}
+		],
+		"reset_B_to_1" : [
+			{ "read" : ".", "to_state": "reset_B_to_1", "write": ".", "action": "LEFT"},
+			{ "read" : "B", "to_state": "reset_B_to_1", "write": "1", "action": "LEFT"},
+			{ "read" : "Y", "to_state": "reset_B_to_1", "write": "Y", "action": "LEFT"},
+			{ "read" : "1", "to_state": "reset_B_to_1", "write": "1", "action": "LEFT"},
+			{ "read" : "0", "to_state": "reset_B_to_1", "write": "0", "action": "LEFT"},
+			{ "read" : "X", "to_state": "end", "write": "X", "action": "RIGHT"}
+		],
+		"end": [
+			{ "read" : ".", "to_state": "HALT", "write": ".", "action": "LEFT"},
+			{ "read" : "0", "to_state": "HALT", "write": "0", "action": "LEFT"},
+			{ "read" : "1", "to_state": "HALT", "write": "1", "action": "LEFT"}
 		]
 	}
 }
