@@ -1,15 +1,15 @@
 machine first state is the one we call
 output lenght is the number of states
 
-step_2(C)
+step_1(C)
 find y
 replace_first 0 1 (C)
 
 
-step_1: replace_first 1 B (step_2) (step_4)
+step_0: replace_first 1 B (step_1) (step_3)
 
-step_2: step_2(step_3)
+step_1: step_1(step_2)
 
-step_3: find_rev B (step_1)
+step_2: find_rev B (step_0)
 
-step_4: replace_all B 1 untilX
+step_3: replace_all B 1 untilX
