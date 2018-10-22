@@ -102,9 +102,12 @@ replace_all :: Direction -> Symbol -> Symbol -> [Symbol] -> StateInt -> StateInt
 replace_all dir alpha beta until found_state first_state =
   replace_first_until dir alpha beta until first_state found_state (first_state ) -- MARCHE PA
 
--- compose_function first_state f1 f2 global_success global_failure = 
---     (first_state, 2) ==> f1 (first_state + 1) & \m ->
---     (m, first_state + 1) ===> f2 (global_success) (global_failure)
+type FunctionMachine = (StateInt -> StateInt -> StateInt -> Machine)
+
+compose_function :: FunctionMachine -> FunctionMachine -> StateInt -> StateInt -> StateInt -> Machine
+compose_function f1 f2 global_success global_failure first_state = 
+     (first_state, 2) ==> f1 (first_state + 1) global_failure & \m ->
+     (m, first_state + 1) ===> f2 (global_success) (global_failure)
     
 copy_machine :: Direction -> StateInt -> StateInt -> Machine
 copy_machine dir found_state first_state =
@@ -113,7 +116,9 @@ copy_machine dir found_state first_state =
   -- ===> find_first dir "Y" (first_state + 2)
 
   ((first_state, 4) ==> replace_first_until dir "1" "B" ["Y", globalBlank] (first_state + 1) (first_state + 3)) & \m ->
-  (m, first_state + 1) ===> find_first dir "Y" (first_state + 2)
+  (m, first_state + 1) ===> compose_function (find_first_until dir "Y" []) (replace_first_until dir "0" "1" []) (first_state + 2) 0 & \m ->
+  (m, first_state + 2) ===> find_first (Program.reverseDir dir) "B" (first_state) & \n ->
+  (m, first_state + 3) ===> replace_all (Program.reverseDir dir) "B" "1" ["X"] found_state
 
    -- union (replace_first_until dir "0" "1" [] (first_state + 1) (first_state + 3) first_state) &
     

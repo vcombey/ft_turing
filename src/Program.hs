@@ -10,6 +10,7 @@ module Program
   , getTransition
   , prettyProgram
   , prettyTransition
+  , reverseDir
   )
   where 
 
@@ -25,6 +26,11 @@ instance ToJSON Direction where
      Program.Left -> pack "LEFT"
      Program.Right -> pack "RIGHT"
      Program.None -> pack "NONE")
+
+reverseDir dir = case dir of
+     Program.Left -> Program.Right
+     Program.Right -> Program.Left
+     Program.None -> Program.None
 
 instance FromJSON Direction where
   parseJSON = withText "Direction" $ \s -> case unpack s of
