@@ -1,0 +1,85 @@
+{
+	"name"    : "term_ubstitution",
+	"alphabet": [ "1", "0", ".", "X", "Y", "B" ],
+	"blank"   : ".",
+	"states"  : [ "start_at_Y", "check_adjacent_Y", "go_to_end", "shift_left_end", "shift_left_1", "shift_left_0", "go_to_X", "mark_1_X", "go_to_Y", "shift_right_1", "shift_right_0", "reset_B_to_1", "end", "HALT" ],
+	"initial" : "start_at_Y",
+	"finals"  : [ "HALT" ],
+	"transitions" : {
+		"start_at_Y" : [
+			{ "read" : "X", "to_state": "start_at_Y", "write": "X", "action": "RIGHT"},
+			{ "read" : "1", "to_state": "start_at_Y", "write": "1", "action": "RIGHT"},
+			{ "read" : "0", "to_state": "start_at_Y", "write": "0", "action": "RIGHT"},
+			{ "read" : "Y", "to_state": "check_adjacent_Y", "write": "Y", "action": "RIGHT"}
+		],
+		"check_adjacent_Y": [
+			{ "read" : "1", "to_state": "go_to_end", "write": "1", "action": "RIGHT"},
+			{ "read" : "0", "to_state": "go_to_X", "write": "0", "action": "LEFT"}
+		],
+		"go_to_end": [
+			{ "read" : "1", "to_state": "go_to_end", "write": "1", "action": "RIGHT"},
+			{ "read" : "0", "to_state": "go_to_end", "write": "0", "action": "RIGHT"},
+			{ "read" : ".", "to_state": "shift_left_end", "write": ".", "action": "LEFT"}
+		],
+		"shift_left_end": [
+			{ "read" : "1", "to_state": "shift_left_1", "write": ".", "action": "LEFT"},
+			{ "read" : "0", "to_state": "shift_left_0", "write": ".", "action": "LEFT"}
+		],
+		"shift_left_1": [
+			{ "read" : "1", "to_state": "shift_left_1", "write": "1", "action": "LEFT"},
+			{ "read" : "0", "to_state": "shift_left_0", "write": "1", "action": "LEFT"},
+			{ "read" : "Y", "to_state": "check_adjacent_Y", "write": "Y", "action": "RIGHT"}
+		],
+		"shift_left_0": [
+			{ "read" : "1", "to_state": "shift_left_1", "write": "0", "action": "LEFT"},
+			{ "read" : "0", "to_state": "shift_left_0", "write": "0", "action": "LEFT"},
+			{ "read" : "Y", "to_state": "check_adjacent_Y", "write": "Y", "action": "RIGHT"}
+		],
+		"go_to_X" : [
+			{ "read" : "1", "to_state": "go_to_X", "write": "1", "action": "LEFT"},
+			{ "read" : "B", "to_state": "go_to_X", "write": "B", "action": "LEFT"},
+			{ "read" : "0", "to_state": "go_to_X", "write": "0", "action": "LEFT"},
+			{ "read" : ".", "to_state": "go_to_X", "write": ".", "action": "LEFT"},
+			{ "read" : "Y", "to_state": "go_to_X", "write": "Y", "action": "LEFT"},
+			{ "read" : "X", "to_state": "mark_1_X", "write": "X", "action": "RIGHT"}
+		],
+		"mark_1_X": [
+			{ "read": "1", "to_state": "go_to_Y", "write": "B", "action": "RIGHT"},
+			{ "read": "X", "to_state": "mark_1_X", "write": "X", "action": "RIGHT"},
+			{ "read": "B", "to_state": "mark_1_X", "write": "B", "action": "RIGHT"},
+			{ "read": ".", "to_state": "reset_B_to_1", "write": ".", "action": "LEFT"},
+			{ "read": "0", "to_state": "reset_B_to_1", "write": "0", "action": "LEFT"},
+			{ "read": "Y", "to_state": "reset_B_to_1", "write": "Y", "action": "LEFT"}
+		],
+		"go_to_Y" : [
+			{ "read" : "X", "to_state": "go_to_Y", "write": "X", "action": "RIGHT"},
+			{ "read" : "1", "to_state": "go_to_Y", "write": "1", "action": "RIGHT"},
+			{ "read" : "0", "to_state": "go_to_Y", "write": "0", "action": "RIGHT"},
+			{ "read" : "Y", "to_state": "shift_right_1", "write": "Y", "action": "RIGHT"}
+		],
+		"shift_right_1": [
+			{ "read" : "1", "to_state": "shift_right_1", "write": "1", "action": "RIGHT"},
+			{ "read" : "0", "to_state": "shift_right_0", "write": "1", "action": "RIGHT"},
+			{ "read" : ".", "to_state": "go_to_X", "write": "1", "action": "LEFT"}
+		],
+		"shift_right_0": [
+			{ "read" : "1", "to_state": "shift_right_1", "write": "0", "action": "RIGHT"},
+			{ "read" : "0", "to_state": "shift_right_0", "write": "0", "action": "RIGHT"},
+			{ "read" : ".", "to_state": "go_to_X", "write": "0", "action": "LEFT"}
+		],
+		"reset_B_to_1" : [
+			{ "read" : ".", "to_state": "reset_B_to_1", "write": ".", "action": "LEFT"},
+			{ "read" : "B", "to_state": "reset_B_to_1", "write": "1", "action": "LEFT"},
+			{ "read" : "Y", "to_state": "reset_B_to_1", "write": "Y", "action": "LEFT"},
+			{ "read" : "1", "to_state": "reset_B_to_1", "write": "1", "action": "LEFT"},
+			{ "read" : "0", "to_state": "reset_B_to_1", "write": "0", "action": "LEFT"},
+			{ "read" : "X", "to_state": "end", "write": "X", "action": "RIGHT"}
+		],
+		"end": [
+			{ "read" : ".", "to_state": "HALT", "write": ".", "action": "LEFT"},
+			{ "read" : "0", "to_state": "HALT", "write": "0", "action": "LEFT"},
+			{ "read" : "1", "to_state": "HALT", "write": "1", "action": "LEFT"}
+		]
+
+	}
+}
