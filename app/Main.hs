@@ -7,6 +7,9 @@ import qualified Tape
 import Data.Aeson
 import System.Environment
 import System.Exit
+import Generate
+
+universal = encodeFile "universal_turing_machine.json" Generate.universal
 
 start file input = ((decodeFileStrict file) :: IO (Maybe Program.Program)) >>=
        \decoded -> case decoded of

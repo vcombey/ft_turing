@@ -16,10 +16,15 @@ module Program
 import GHC.Generics
 import Data.Aeson
 import qualified Data.List as List
-import Data.Text  (unpack)
+import Data.Text  (unpack, pack)
 import Data.HashMap.Strict as HashMap
 
-data Direction = Left | Right deriving (Show, Generic)
+data Direction = Left | Right | None deriving (Show, Generic)
+instance ToJSON Direction where
+   toJSON (dir) = String (case dir of
+     Program.Left -> pack "LEFT"
+     Program.Right -> pack "RIGHT"
+     Program.None -> pack "NONE")
 
 instance FromJSON Direction where
   parseJSON = withText "Direction" $ \s -> case unpack s of
@@ -36,6 +41,7 @@ data Transition = Transition {
   , action :: Direction
 } deriving (Show, Generic)
 instance FromJSON Transition
+instance ToJSON Transition
 
 prettyTransition state t =
   "(" ++ state ++ ", " ++ (Program.read t) ++ ") -> (" ++ (to_state t) ++ ", " ++ (write t) ++ ", " ++ (show (action t)) ++ ")"
@@ -47,9 +53,10 @@ data Program = Program {
     , states :: [State]
     , initial :: State
     , finals :: [State]
-   , transitions :: HashMap State [Transition]
+    , transitions :: HashMap State [Transition]
 } deriving (Show, Generic)
 instance FromJSON Program
+instance ToJSON Program
 
 prettyProgram p =
         divider                           ++ "\n" ++
