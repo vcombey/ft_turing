@@ -45,24 +45,6 @@ transition_state first_state final_state =
     HashMap.insert (show (first_state))
             (for_letter globalAlphabet (newTransition "" "" Program.None final_state))
 
---find :: StateInt -> StateInt -> Symbol -> StateInt -> Machine
---find c b alpha first_state =
---  let nb_state = 3 in
---  HashMap.empty &
---          HashMap.insert (show first_state)
---                    ([newTransition "e" "e" Program.Left (first_state + 1)]
---                    ++ (not_letter ["e"] (newTransition "" "" Program.Left first_state)))
---               & 
---          HashMap.insert (show (first_state + 1))
---                    ([(newTransition alpha alpha None c),
---                     newTransition globalBlank alpha Program.Right (first_state + 2)]
---                    ++ (not_letter [alpha, globalBlank] (newTransition "" "" Program.Right (first_state + 1))))
---               &
---          HashMap.insert (show (first_state + 2))
---                    ([newTransition alpha alpha None c ,
---                     newTransition globalBlank globalBlank Program.Right b]
---                    ++ (not_letter [alpha, globalBlank] (newTransition "" "" Program.Right (first_state + 1) )))
-
 maxState :: Machine -> StateInt
 maxState m = maximum (List.map Prelude.read (keys m))
 
@@ -78,31 +60,31 @@ maxState m = maximum (List.map Prelude.read (keys m))
 
 
 find_first_until :: Direction -> Symbol -> [Symbol] -> StateInt -> StateInt -> StateInt -> Machine
-find_first_until dir alpha until found_state not_found_state first_state =
+find_first_until dir alpha until success_state failure_state first_state =
     HashMap.empty &
     HashMap.insert (show (first_state))
-            ([(newTransition alpha alpha None found_state)]
-            ++ (for_letter until (newTransition "" "" Program.None not_found_state))
+            ([(newTransition alpha alpha None success_state)]
+            ++ (for_letter until (newTransition "" "" Program.None failure_state))
             ++ not_letter (until ++ [alpha]) (newTransition "" "" dir (first_state)))
 
 find_first :: Direction -> Symbol -> StateInt -> StateInt -> Machine
-find_first dir alpha found_state first_state =
-  find_first_until dir alpha [] found_state failureState first_state
+find_first dir alpha success_state first_state =
+  find_first_until dir alpha [] success_state failureState first_state
 
 replace_first_until :: Direction -> Symbol -> Symbol -> [Symbol] -> StateInt -> StateInt -> StateInt -> Machine
-replace_first_until dir alpha beta until found_state not_found_state first_state =
-    (first_state, 2) ==> find_first_until dir alpha until (first_state + 1) not_found_state &
+replace_first_until dir alpha beta until success_state failure_state first_state =
+    (first_state, 2) ==> find_first_until dir alpha until (first_state + 1) failure_state &
     HashMap.insert (show (first_state + 1))
-            ([(newTransition alpha beta None found_state)]
-            ++ not_letter ([alpha]) (newTransition "" "" dir (not_found_state)))
+            ([(newTransition alpha beta None success_state)]
+            ++ not_letter ([alpha]) (newTransition "" "" dir (failure_state)))
 
 replace_first :: Direction -> Symbol -> Symbol -> StateInt -> StateInt -> Machine
-replace_first dir alpha beta found_state first_state =
-    replace_first_until dir alpha beta [] found_state failureState first_state
+replace_first dir alpha beta success_state first_state =
+    replace_first_until dir alpha beta [] success_state failureState first_state
 
 replace_all :: Direction -> Symbol -> Symbol -> [Symbol] -> StateInt -> StateInt -> Machine
-replace_all dir alpha beta until found_state first_state =
-  replace_first_until dir alpha beta until first_state found_state (first_state ) -- MARCHE PA
+replace_all dir alpha beta until success_state first_state =
+  replace_first_until dir alpha beta until first_state success_state (first_state ) -- MARCHE PA
 
 type FunctionMachine = (StateInt -> StateInt -> StateInt -> Machine)
 
@@ -111,50 +93,43 @@ compose_function f1 f2 global_success global_failure first_state =
      (first_state, 2) ==> f1 (first_state + 1) global_failure & \m ->
      (m, first_state + 1) ===> f2 (global_success) (global_failure)
     
-copy_machine :: Direction -> StateInt -> StateInt -> Machine
-copy_machine dir found_state first_state =
-  -- (((first_state, 4) ==> replace_first_until dir "1" "B" ["Y", globalBlank] (first_state + 1) (first_state + 3)
-  -- ), first_state + 1)
-  -- ===> find_first dir "Y" (first_state + 2)
+copy_machine :: StateInt -> StateInt -> Machine
+copy_machine success_state first_state =
+  ((first_state, 4) ==> replace_first_until Program.Right "1" "B" ["Y", globalBlank] (first_state + 1) (first_state + 3)) & \m ->
+  (m, first_state + 1) ===> compose_function (find_first_until Program.Right "Y" []) (replace_first_until Program.Right "0" "1" []) (first_state + 2) failureState & \m ->
+  (m, first_state + 2) ===> find_first Program.Left "B" (first_state) & \m ->
+  (m, first_state + 3) ===> replace_all Program.Left "B" "1" ["X"] success_state
 
-  ((first_state, 4) ==> replace_first_until dir "1" "B" ["Y", globalBlank] (first_state + 1) (first_state + 3)) & \m ->
-  (m, first_state + 1) ===> compose_function (find_first_until dir "Y" []) (replace_first_until dir "0" "1" []) (first_state + 2) failureState & \m ->
-  (m, first_state + 2) ===> find_first (Program.reverseDir dir) "B" (first_state) & \m ->
-  (m, first_state + 3) ===> replace_all (Program.reverseDir dir) "B" "1" ["X"] found_state
+copy_machine_rev :: StateInt -> StateInt -> Machine
+copy_machine_rev success_state first_state =
+  ((first_state, 4) ==> find_first Program.Right "Y" (first_state + 1) & \m ->
+  (m, first_state + 1) ===> replace_first_until Program.Right "1" "B" [globalBlank] (first_state + 2) (first_state + 3)) & \m ->
+  (m, first_state + 2) ===> compose_function (find_first_until Program.Left "X" []) (replace_first_until Program.Right "0" "1" []) (first_state) failureState & \m ->
+  (m, first_state + 3) ===> replace_all (Program.Left) "B" "1" ["Y"] success_state
 
-   -- union (replace_first_until dir "0" "1" [] (first_state + 1) (first_state + 3) first_state) &
-    
+matching_machine :: StateInt -> StateInt -> StateInt -> Machine
+matching_machine success_state failure_state first_state =
+  ((first_state, 6) ==> replace_first_until Program.Right "1" "B" ["Y", globalBlank] (first_state + 1) (first_state + 4)) & \m ->
+  (m, first_state + 1) ===> find_first Program.Right "Y" (first_state + 2) & \m ->
+  (m, first_state + 2) ===> replace_first_until Program.Right "1" "B" [globalBlank] (first_state + 3) (first_state + 5) & \m ->
+  (m, first_state + 3) ===> find_first Program.Left "X" (first_state)  & \m ->
+  (m, first_state + 4) ===> compose_function (find_first_until Program.Right "Y" []) (find_first_until Program.Right "1" [globalBlank]) (first_state + 5) (first_state + 6) & \m ->
+  (m, first_state + 5) ===> replace_all Program.Left "B" "1" ["X"] failure_state & \m ->
+  (m, first_state + 6) ===> replace_all Program.Left "B" "1" ["X"] success_state
 
-
---erase :: StateInt -> StateInt -> Symbol -> StateInt -> Machine
---erase c b alpha first_state = 
---  let nb_state = 1 in
---    find first_state b alpha (first_state + nb_state) &
---    HashMap.insert (show first_state)
---                    (any_letter (newTransition "" globalBlank None c))
---
---erase_all :: StateInt -> Symbol -> StateInt -> Machine
---erase_all b alpha first_state = 
---  erase first_state b alpha first_state
-
---copying_machine :: StateInt -> StateInt -> Machine
---copying_machine first_state final_state =
---  let nb_state = 1 in
---    transition_state first_state (first_state + nb_state) &
---
---    find first_state b "1" (first_state + 1) &
 
 universal = 
 --  let trans = find_first_until Program.Right "X" [] 0 1 2 in
 --    let trans = replace_first_until Program.Right "X" "B" [] 0 1 2 in
 --    let trans = replace_all Program.Right "X" "B" ["Z"] 0 1 in
-    let trans = copy_machine Program.Right 0 1 in
+--    let trans = copy_machine 0 1 in
+    let trans = matching_machine 0 1 2 in
    Program {
         name="Turing'ception"
         , alphabet = globalAlphabet ++ ["."]
         , blank = "."
         , states = List.map (\x -> show x) [-1..(maxState trans + 1)]
-        , initial = "1"
+        , initial = "2"
         , finals = []
         , transitions = trans
     }
