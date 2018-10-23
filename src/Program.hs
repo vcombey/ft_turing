@@ -159,8 +159,8 @@ transpileProgram p =
   let new_states = (initial p) : (List.filter (initial p /= ) (states p)) in
   let states_to_code = List.map (\(s, i) -> (s, replicate i '1')) (new_states `List.zip` [1..]) in
   let concat_strings strings = List.foldl' (\acc b -> acc ++ b) "" strings in
-  --let l = List.map (\(key, list_transition) -> (key, (concat_strings [transpileTransition key t (transpileSymbol symb_to_code) (transpileState states_to_code) | t <- list_transition]))) (HashMap.toList $ transitions p)
-  --in show l
- (HashMap.foldWithKey (\acc key list_transition -> acc ++ (concat_strings [transpileTransition key t (transpileSymbol symb_to_code) (transpileState states_to_code) | t <- list_transition])) "" (transitions p))
+--  let l = List.map (\(key, list_transition) -> (key, (concat_strings [transpileTransition key t (transpileSymbol symb_to_code) (transpileState states_to_code) | t <- list_transition]))) (HashMap.toList $ transitions p)
+ -- in show l
+  (HashMap.foldlWithKey' (\acc key list_transition -> acc ++ (concat_strings [transpileTransition key t (transpileSymbol symb_to_code) (transpileState states_to_code) | t <- list_transition])) "" (transitions p))
 
   
