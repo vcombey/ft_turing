@@ -152,8 +152,8 @@ getTransition p state symbol = HashMap.lookup state (transitions p)
   >>= \list_transition -> List.find (\x -> Program.read x == symbol) list_transition
 
 
-transpileProgram :: Program -> String
-transpileProgram p =
+transpileProgram :: Program -> String -> String
+transpileProgram p input =
   let new_alphabet = (blank p) : (List.filter (blank p /= ) (alphabet p)) in
   let symb_to_code = List.map (\(s, i) -> (s, replicate i '1')) (new_alphabet `List.zip` [1..]) in
   let new_states = (initial p) : (List.filter (initial p /= ) (states p)) in
@@ -161,7 +161,8 @@ transpileProgram p =
   let concat_strings strings = List.foldl' (\acc b -> acc ++ b) "" strings in
 --  let l = List.map (\(key, list_transition) -> (key, (concat_strings [transpileTransition key t (transpileSymbol symb_to_code) (transpileState states_to_code) | t <- list_transition]))) (HashMap.toList $ transitions p)
  -- in show l
-  replicate ((List.length $ alphabet p) + (List.length $ states p) + 2) '0' ++ 
-  (HashMap.foldlWithKey' (\acc key list_transition -> acc ++ (concat_strings [transpileTransition key t (transpileSymbol symb_to_code) (transpileState states_to_code) | t <- list_transition])) "" (transitions p))
+  "X" ++ replicate ((List.length $ alphabet p) + (List.length $ states p) + 2) '0' ++ 
+  "Y" ++ (HashMap.foldlWithKey' (\acc key list_transition -> acc ++ (concat_strings [transpileTransition key t (transpileSymbol symb_to_code) (transpileState states_to_code) | t <- list_transition])) "" (transitions p)) ++
+  "Z" ++ (List.concat $ (List.map (\c -> transpileSymbol symb_to_code [c] ++ "0") input))
 
   
