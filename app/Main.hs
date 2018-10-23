@@ -11,6 +11,11 @@ import Generate
 
 universal = encodeFile "universal_turing_machine.json" Generate.universal
 
+transpile file  = ((decodeFileStrict file) :: IO (Maybe Program.Program)) >>=
+       \decoded -> case decoded of
+         Just program -> putStrLn $ show (Program.transpileProgram program)
+         Nothing -> putStrLn "parsing error"
+
 start file input = ((decodeFileStrict file) :: IO (Maybe Program.Program)) >>=
        \decoded -> case decoded of
          Just program -> 
@@ -25,6 +30,7 @@ main = getArgs >>= parse
  
 parse x | x == ["-h"] || x == ["--help"] = usage >> exitWith ExitSuccess
 parse x | x == ["-u"] || x == ["--universal"] = Main.universal
+parse (x:file:[]) | x == "-t" || x == "--transpile" = transpile file
 parse []     = usage >> exitWith (ExitFailure 1)
 parse (_:[]) = usage >> exitWith (ExitFailure 1)
 parse (file:input:[]) = start file input

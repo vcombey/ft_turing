@@ -1,6 +1,6 @@
 {
 	"name"    : "sample",
-	"alphabet": [ ".", "X", "1", "2", "3" ],
+	"alphabet": [ "1", "2",".", "3", "X"],
 	"blank"   : ".",
 	"states"  : [ "replace_1_with_2", "replace_end_with_3", "HALT" ],
 	"initial" : "replace_1_with_2",

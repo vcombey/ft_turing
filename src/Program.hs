@@ -11,6 +11,7 @@ module Program
   , prettyProgram
   , prettyTransition
   , reverseDir
+  , transpileProgram
   )
   where 
 
@@ -32,6 +33,11 @@ reverseDir dir = case dir of
      Program.Right -> Program.Left
      Program.None -> Program.None
 
+transpileDirection dir = case dir of
+     Program.Left -> "1"
+     Program.None -> "11"
+     Program.Right -> "111"
+
 instance FromJSON Direction where
   parseJSON = withText "Direction" $ \s -> case unpack s of
     "LEFT" -> return Program.Left
@@ -39,7 +45,18 @@ instance FromJSON Direction where
     "NONE" -> return Program.None
   
 type State = String
+
+transpileState state_to_code s = 
+  case List.lookup s state_to_code of
+  Just res -> res
+  Nothing -> error "Maybe.fromJust: Nothing" 
+
 type Symbol = String
+
+transpileSymbol symb_to_code sym = 
+  case List.lookup sym symb_to_code of
+  Just res -> res
+  Nothing -> error "Maybe.fromJust: Nothing" 
 
 data Transition = Transition {
   read :: Symbol
@@ -50,6 +67,19 @@ data Transition = Transition {
 instance FromJSON Transition
 instance ToJSON Transition
 
+transpileTransition :: State -> Transition -> (Symbol -> String) -> (State -> String) -> String
+transpileTransition state trans transSym transState =
+  transState state ++
+  "0" ++
+  transSym (Program.read trans) ++
+  "0" ++
+  transState (Program.to_state trans) ++
+  "0" ++
+  transSym (Program.write trans) ++
+  "0" ++
+  transpileDirection (Program.action trans) ++
+  "00" 
+  
 prettyTransition state t =
   "(" ++ state ++ ", " ++ (Program.read t) ++ ") -> (" ++ (to_state t) ++ ", " ++ (write t) ++ ", " ++ (show (action t)) ++ ")"
  
@@ -121,3 +151,16 @@ getTransition :: Program -> State -> Symbol -> Maybe Transition
 getTransition p state symbol = HashMap.lookup state (transitions p)
   >>= \list_transition -> List.find (\x -> Program.read x == symbol) list_transition
 
+
+transpileProgram :: Program -> String
+transpileProgram p =
+  let new_alphabet = (blank p) : (List.filter (blank p /= ) (alphabet p)) in
+  let symb_to_code = List.map (\(s, i) -> (s, replicate i '1')) (new_alphabet `List.zip` [1..]) in
+  let new_states = (initial p) : (List.filter (initial p /= ) (states p)) in
+  let states_to_code = List.map (\(s, i) -> (s, replicate i '1')) (new_states `List.zip` [1..]) in
+  let concat_strings strings = List.foldl' (\acc b -> acc ++ b) "" strings in
+  --let l = List.map (\(key, list_transition) -> (key, (concat_strings [transpileTransition key t (transpileSymbol symb_to_code) (transpileState states_to_code) | t <- list_transition]))) (HashMap.toList $ transitions p)
+  --in show l
+ (HashMap.foldWithKey (\acc key list_transition -> acc ++ (concat_strings [transpileTransition key t (transpileSymbol symb_to_code) (transpileState states_to_code) | t <- list_transition])) "" (transitions p))
+
+  
