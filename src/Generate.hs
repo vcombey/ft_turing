@@ -17,7 +17,7 @@ type StateInt = Int
 
 failureState = -1
 
-globalAlphabet = ["0" , "1" , "X", "Y", "Z", "B"]
+globalAlphabet = ["0" , "1" , "X", "Y", "Z", "B", "."]
 globalBlank = "0"
 
 for_letter ::  [Symbol] -> Transition -> [Transition]
@@ -117,19 +117,49 @@ matching_machine success_state failure_state first_state =
   (m, first_state + 5) ===> replace_all Program.Left "B" "1" ["X"] failure_state & \m ->
   (m, first_state + 6) ===> replace_all Program.Left "B" "1" ["X"] success_state
 
+shiftl_machine :: StateInt -> StateInt -> Machine
+shiftl_machine success_state first_state =
+  HashMap.empty &
+  HashMap.insert (show first_state)
+                (
+                [newTransition "1" "." Program.Left (first_state + 1)
+                , newTransition "0" "." Program.Left (first_state + 2)
+                , newTransition "." "." Program.Left (first_state)]
+                )
+                &
+  HashMap.insert (show (first_state + 1))
+                (
+                [newTransition "1" "1" Program.Left (first_state + 1)
+                , newTransition "0" "1" Program.Left (first_state + 2)
+                , newTransition "Y" "Y" Program.None (success_state)]
+                )
+                &
+  HashMap.insert (show (first_state + 2))
+                (
+                [newTransition "1" "0" Program.Left (first_state + 1)
+                , newTransition "0" "0" Program.Left (first_state + 2)
+                , newTransition "Y" "Y" Program.None (success_state)]
+                )
+                
+colapse_machine :: StateInt -> StateInt -> Machine
+colapse_machine success_state first_state =
+  (first_state, 3) ==> find_first_until Program.Right "1" ["0", "."] (first_state + 1) (success_state) & \m ->
+  (m, first_state + 1) ===> find_first Program.Right "." (first_state + 2) & \m ->
+  (m, first_state + 2) ===> shiftl_machine first_state
 
 universal = 
 --  let trans = find_first_until Program.Right "X" [] 0 1 2 in
 --    let trans = replace_first_until Program.Right "X" "B" [] 0 1 2 in
 --    let trans = replace_all Program.Right "X" "B" ["Z"] 0 1 in
 --    let trans = copy_machine 0 1 in
-    let trans = matching_machine 0 1 2 in
+--    let trans = matching_machine 0 1 2 in
+    let trans = colapse_machine 0 1 in
    Program {
         name="Turing'ception"
         , alphabet = globalAlphabet ++ ["."]
         , blank = "."
         , states = List.map (\x -> show x) [-1..(maxState trans + 1)]
-        , initial = "2"
+        , initial = "1"
         , finals = []
         , transitions = trans
     }
