@@ -158,11 +158,15 @@ transpileProgram p input =
   let symb_to_code = List.map (\(s, i) -> (s, replicate i '1')) (new_alphabet `List.zip` [1..]) in
   let new_states = (initial p) : (List.filter (initial p /= ) (states p)) in
   let states_to_code = List.map (\(s, i) -> (s, replicate i '1')) (new_states `List.zip` [1..]) in
+  let state_index state = List.find (\(s, i) -> s == state) states_to_code in
   let concat_strings strings = List.foldl' (\acc b -> acc ++ b) "" strings in
---  let l = List.map (\(key, list_transition) -> (key, (concat_strings [transpileTransition key t (transpileSymbol symb_to_code) (transpileState states_to_code) | t <- list_transition]))) (HashMap.toList $ transitions p)
+  let l = List.map (\(key, list_transition) -> (key, (concat_strings [transpileTransition key t (transpileSymbol symb_to_code) (transpileState states_to_code) | t <- list_transition]))) (HashMap.toList $ transitions p) in
  -- in show l
+  let sorted = List.sortOn (\(key,_) -> case state_index key of
+                                           Just (_, i) -> i
+                                           Nothing -> error "blabla") l in
   "X" ++ replicate ((List.length $ alphabet p) + (List.length $ states p) + 2) '0' ++ 
-  "Y" ++ (HashMap.foldlWithKey' (\acc key list_transition -> acc ++ (concat_strings [transpileTransition key t (transpileSymbol symb_to_code) (transpileState states_to_code) | t <- list_transition])) "" (transitions p)) ++
-  "Z" ++ (List.concat $ (List.map (\c -> transpileSymbol symb_to_code [c] ++ "0") input))
+  "Y" ++ (concat $ List.map (\(_, s) -> s) sorted)
+  ++ "Z" ++ (List.concat $ (List.map (\c -> transpileSymbol symb_to_code [c] ++ "0") input))
 
   
