@@ -140,12 +140,46 @@ shiftl_machine success_state first_state =
                 , newTransition "0" "0" Program.Left (first_state + 2)
                 , newTransition "Y" "Y" Program.None (success_state)]
                 )
-                
+               
 colapse_machine :: StateInt -> StateInt -> Machine
 colapse_machine success_state first_state =
   (first_state, 3) ==> find_first_until Program.Right "1" ["0", "."] (first_state + 1) (success_state) & \m ->
   (m, first_state + 1) ===> find_first Program.Right "." (first_state + 2) & \m ->
   (m, first_state + 2) ===> shiftl_machine first_state
+
+shiftr_machine :: StateInt -> StateInt -> Machine
+shiftr_machine success_state first_state =
+  HashMap.empty &
+  HashMap.insert (show first_state)
+                (
+                [newTransition "Y" "Y" Program.Right first_state
+                , newTransition "1" "1" Program.Right (first_state + 1)
+                , newTransition "0" "1" Program.Right (first_state + 2)]
+                )
+                &
+  HashMap.insert (show (first_state + 1))
+                (
+                [newTransition "1" "1" Program.Right (first_state + 1)
+                , newTransition "0" "1" Program.Right (first_state + 2)
+                , newTransition "." "1" Program.None (success_state)]
+                )
+                &
+  HashMap.insert (show (first_state + 2))
+                (
+                [newTransition "1" "0" Program.Right (first_state + 1)
+                , newTransition "0" "0" Program.Right (first_state + 2)
+                , newTransition "." "0" Program.None (success_state)]
+                )
+ 
+substitution_machine :: StateInt -> StateInt -> Machine
+substitution_machine success_state first_state =
+  (first_state, 6) ==> colapse_machine (first_state + 1) & \m ->
+  (m, first_state + 1) ===> find_first Program.Left "X" (first_state + 2) & \m ->
+  (m, first_state + 2) ===> replace_first_until Program.Right "1" "B" [globalBlank, "Y"] (first_state + 3) (first_state + 5) & \m ->
+  (m, first_state + 3) ===> find_first Program.Right "Y" (first_state + 4) & \m ->
+  (m, first_state + 4) ===> shiftr_machine (first_state + 1) & \m ->
+  (m, first_state + 5) ===> replace_all Program.Left "B" "1" ["X"] success_state
+
 
 universal = 
 --  let trans = find_first_until Program.Right "X" [] 0 1 2 in
@@ -153,7 +187,9 @@ universal =
 --    let trans = replace_all Program.Right "X" "B" ["Z"] 0 1 in
 --    let trans = copy_machine 0 1 in
 --    let trans = matching_machine 0 1 2 in
-    let trans = colapse_machine 0 1 in
+--    let trans = colapse_machine 0 1 in
+--    let trans = shiftr_machine 0 1 in
+    let trans = substitution_machine 0 1 in
    Program {
         name="Turing'ception"
         , alphabet = globalAlphabet ++ ["."]

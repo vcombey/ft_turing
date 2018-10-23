@@ -57,7 +57,7 @@ step 1: find Y []
 
 step 2: replace 1 B [blank] (step 3) (step 5)
 
-step3: find_rev X (step 0)
+step 3: find_rev X (step 0)
 
 step 4 (find Y find 1 [blank]) (step5) (step6)
 
@@ -67,21 +67,28 @@ step 6: replace_all B 1 X (found_state)
 
 1 X 1  1  1 0 1  1 Y 1  1  1  1
 
---COLAPSE_MACHINE
-
-Y 1 1 1 0 1 1 1
-
-shift dir symbol until
-
-step 1
 
 
+--SUBSTITUTE
+
+Step 1: First, the Turing machine checks whether the cell right-adjacent to Y contains a 0 or a 1. If it’s a 0, then the sequence is already collapsed, and so the machine proceeds directly to the insertion stage. Otherwise, it continues to Step 2.
+
+Step 2: The head shifts to the far right end of the sequence and proceeds to shift each cell in the sequence one unit to the left. During this shifting process, the Turing machine “remembers” the content of each cell as it is erased by converting to an appropriate, designated state. The cell marked with Y , however, is not overwritten; when the head reaches this cell, this shifting step is complete. Go to Step 1.
+
+The insertion stage is similar to the collapsing stage, but the cells are shifted in the opposite direction. Each time that the machine passes through the insertion cycle, another 1 in the unary term next to X is marked off with a B. After sufficient repetition, that is, when all of the 1’s have been marked off, the insertion stage is complete. For example purposes, consider the following time diagram, which uses the initial tape pattern from the example in Lemma 2.2:
 
 
+step 0: collapse
 
-step 0 : find 1 [0] (step 1) (succes state)
+step 1: find_rev X (step 2)
 
-step 1: find . []
+step 2: replace 1 B [Y, blank] (step 3) (step 5)
+
+step 3: find Y []
+
+step 4: shiftr (step 1)
+
+step 5: replace_all B 1 X (success_state)
 --
 
 
