@@ -84,7 +84,7 @@ replace_first dir alpha beta success_state first_state =
 
 replace_all :: Direction -> Symbol -> Symbol -> [Symbol] -> StateInt -> StateInt -> Machine
 replace_all dir alpha beta until success_state first_state =
-  replace_first_until dir alpha beta until first_state success_state (first_state ) -- MARCHE PA
+  replace_first_until dir alpha beta until first_state success_state (first_state)
 
 type FunctionMachine = (StateInt -> StateInt -> StateInt -> Machine)
 
@@ -109,7 +109,7 @@ copy_machine_rev success_state first_state =
 
 matching_machine :: StateInt -> StateInt -> StateInt -> Machine
 matching_machine success_state failure_state first_state =
-  ((first_state, 6) ==> replace_first_until Program.Right "1" "B" ["Y", globalBlank] (first_state + 1) (first_state + 4)) & \m ->
+  ((first_state, 7) ==> replace_first_until Program.Right "1" "B" ["Y", globalBlank] (first_state + 1) (first_state + 4)) & \m ->
   (m, first_state + 1) ===> find_first Program.Right "Y" (first_state + 2) & \m ->
   (m, first_state + 2) ===> replace_first_until Program.Right "1" "B" [globalBlank] (first_state + 3) (first_state + 5) & \m ->
   (m, first_state + 3) ===> find_first Program.Left "X" (first_state)  & \m ->
