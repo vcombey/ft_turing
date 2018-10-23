@@ -161,6 +161,7 @@ transpileProgram p =
   let concat_strings strings = List.foldl' (\acc b -> acc ++ b) "" strings in
 --  let l = List.map (\(key, list_transition) -> (key, (concat_strings [transpileTransition key t (transpileSymbol symb_to_code) (transpileState states_to_code) | t <- list_transition]))) (HashMap.toList $ transitions p)
  -- in show l
+  replicate ((List.length $ alphabet p) + (List.length $ states p) + 2) '0' ++ 
   (HashMap.foldlWithKey' (\acc key list_transition -> acc ++ (concat_strings [transpileTransition key t (transpileSymbol symb_to_code) (transpileState states_to_code) | t <- list_transition])) "" (transitions p))
 
   
