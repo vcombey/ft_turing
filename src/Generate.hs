@@ -15,6 +15,8 @@ import Program
 type Machine = HashMap State [Transition]
 type StateInt = Int
 
+failureState = -1
+
 globalAlphabet = ["0" , "1" , "X", "Y", "Z", "B"]
 globalBlank = "0"
 
@@ -85,7 +87,7 @@ find_first_until dir alpha until found_state not_found_state first_state =
 
 find_first :: Direction -> Symbol -> StateInt -> StateInt -> Machine
 find_first dir alpha found_state first_state =
-  find_first_until dir alpha [] found_state found_state first_state
+  find_first_until dir alpha [] found_state failureState first_state
 
 replace_first_until :: Direction -> Symbol -> Symbol -> [Symbol] -> StateInt -> StateInt -> StateInt -> Machine
 replace_first_until dir alpha beta until found_state not_found_state first_state =
@@ -96,7 +98,7 @@ replace_first_until dir alpha beta until found_state not_found_state first_state
 
 replace_first :: Direction -> Symbol -> Symbol -> StateInt -> StateInt -> Machine
 replace_first dir alpha beta found_state first_state =
-    replace_first_until dir alpha beta [] found_state 0 first_state
+    replace_first_until dir alpha beta [] found_state failureState first_state
 
 replace_all :: Direction -> Symbol -> Symbol -> [Symbol] -> StateInt -> StateInt -> Machine
 replace_all dir alpha beta until found_state first_state =
@@ -116,8 +118,8 @@ copy_machine dir found_state first_state =
   -- ===> find_first dir "Y" (first_state + 2)
 
   ((first_state, 4) ==> replace_first_until dir "1" "B" ["Y", globalBlank] (first_state + 1) (first_state + 3)) & \m ->
-  (m, first_state + 1) ===> compose_function (find_first_until dir "Y" []) (replace_first_until dir "0" "1" []) (first_state + 2) 0 & \m ->
-  (m, first_state + 2) ===> find_first (Program.reverseDir dir) "B" (first_state) & \n ->
+  (m, first_state + 1) ===> compose_function (find_first_until dir "Y" []) (replace_first_until dir "0" "1" []) (first_state + 2) failureState & \m ->
+  (m, first_state + 2) ===> find_first (Program.reverseDir dir) "B" (first_state) & \m ->
   (m, first_state + 3) ===> replace_all (Program.reverseDir dir) "B" "1" ["X"] found_state
 
    -- union (replace_first_until dir "0" "1" [] (first_state + 1) (first_state + 3) first_state) &
@@ -151,7 +153,7 @@ universal =
         name="Turing'ception"
         , alphabet = globalAlphabet ++ ["."]
         , blank = "."
-        , states = List.map (\x -> show x) [0..(maxState trans + 1)]
+        , states = List.map (\x -> show x) [-1..(maxState trans + 1)]
         , initial = "1"
         , finals = []
         , transitions = trans
