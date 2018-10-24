@@ -280,12 +280,14 @@ step6 success_state first_state =
 
 step7 :: StateInt -> StateInt -> Machine
 step7 success_state first_state =
-  (first_state, 6) ==> shift_one_term_right Program.Right "Y" (first_state + 1) & \m ->
+  (first_state, 8) ==> shift_one_term_right Program.Right "Y" (first_state + 1) & \m ->
   (m, first_state + 1) ===> find_first_until Program.Right "1" ["0"] (first_state + 2) failureState & \m ->
-  (m, first_state + 2) ===> find_first_until Program.Right "1" ["0"] (first_state + 3) (first_state + 4) & \m ->
-  (m, first_state + 3) ===> find_first_until Program.Right "1" ["0"] (first_state + 5) success_state & \m ->
-  (m, first_state + 4) ===> shift_one_term_left Program.Left "Z" success_state & \m ->
-  (m, first_state + 5) ===> shift_one_term_right Program.Right "Z" success_state
+  (m, first_state + 2) ===> right_machine (first_state + 3) & \m ->
+  (m, first_state + 3) ===> find_first_until Program.Right "1" ["0"] (first_state + 4) (first_state + 6) & \m ->
+  (m, first_state + 4) ===> right_machine (first_state + 5) & \m ->
+  (m, first_state + 5) ===> find_first_until Program.Right "1" ["0"] (first_state + 7) success_state & \m ->
+  (m, first_state + 6) ===> shift_one_term_left Program.Right "Z" success_state & \m ->
+  (m, first_state + 7) ===> shift_one_term_right Program.Right "Z" success_state
 
 step8 :: StateInt -> StateInt -> Machine
 step8 success_state first_state =
