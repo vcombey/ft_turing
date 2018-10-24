@@ -117,8 +117,8 @@ matching_machine success_state failure_state first_state =
   (m, first_state + 5) ===> replace_all Program.Left "B" "1" ["X"] failure_state & \m ->
   (m, first_state + 6) ===> replace_all Program.Left "B" "1" ["X"] success_state
 
-shiftl_machine :: StateInt -> StateInt -> Machine
-shiftl_machine success_state first_state =
+shiftl_machine :: Symbol -> StateInt -> StateInt -> Machine
+shiftl_machine untilSymbol success_state first_state =
   HashMap.empty &
   HashMap.insert (show first_state)
                 (
@@ -131,21 +131,21 @@ shiftl_machine success_state first_state =
                 (
                 [newTransition "1" "1" Program.Left (first_state + 1)
                 , newTransition "0" "1" Program.Left (first_state + 2)
-                , newTransition "Y" "Y" Program.None (success_state)]
+                , newTransition untilSymbol untilSymbol Program.None (success_state)]
                 )
                 &
   HashMap.insert (show (first_state + 2))
                 (
                 [newTransition "1" "0" Program.Left (first_state + 1)
                 , newTransition "0" "0" Program.Left (first_state + 2)
-                , newTransition "Y" "Y" Program.None (success_state)]
+                , newTransition untilSymbol untilSymbol Program.None (success_state)]
                 )
                
-colapse_machine :: StateInt -> StateInt -> Machine
-colapse_machine success_state first_state =
+collapse_machine :: Symbol -> StateInt -> StateInt -> Machine
+collapse_machine untilSymbol success_state first_state =
   (first_state, 3) ==> find_first_until Program.Right "1" ["0", "."] (first_state + 1) (success_state) & \m ->
   (m, first_state + 1) ===> find_first Program.Right "." (first_state + 2) & \m ->
-  (m, first_state + 2) ===> shiftl_machine first_state
+  (m, first_state + 2) ===> shiftl_machine untilSymbol first_state
 
 left_machine success_state first_state =
   HashMap.empty & HashMap.insert (show first_state) (any_letter (newTransition "" "" Program.Left success_state))
@@ -157,12 +157,12 @@ machine_with_transition :: [Transition] -> StateInt -> Machine
 machine_with_transition trans first_state =
   HashMap.empty & HashMap.insert (show first_state) (trans)
 
-shiftr_machine :: StateInt -> StateInt -> Machine
-shiftr_machine success_state first_state =
+shiftr_machine :: Symbol -> StateInt -> StateInt -> Machine
+shiftr_machine fromSymbol success_state first_state =
   HashMap.empty &
   HashMap.insert (show first_state)
                 (
-                [newTransition "Y" "Y" Program.Right first_state
+                [newTransition fromSymbol fromSymbol Program.Right first_state
                 , newTransition "1" "1" Program.Right (first_state + 1)
                 , newTransition "0" "1" Program.Right (first_state + 2)]
                 )
@@ -181,14 +181,14 @@ shiftr_machine success_state first_state =
                 , newTransition "." "0" Program.None (success_state)]
                 )
  
-substitution_machine :: StateInt -> StateInt -> Machine
-substitution_machine success_state first_state =
-  (first_state, 6) ==> colapse_machine (first_state + 1) & \m ->
-  (m, first_state + 1) ===> find_first Program.Left "X" (first_state + 2) & \m ->
-  (m, first_state + 2) ===> replace_first_until Program.Right "1" "B" [globalBlank, "Y"] (first_state + 3) (first_state + 5) & \m ->
-  (m, first_state + 3) ===> find_first Program.Right "Y" (first_state + 4) & \m ->
-  (m, first_state + 4) ===> shiftr_machine (first_state + 1) & \m ->
-  (m, first_state + 5) ===> replace_all Program.Left "B" "1" ["X"] success_state
+substitution_machine :: Symbol -> Symbol -> StateInt -> StateInt -> Machine
+substitution_machine fromSymbol toSymbol success_state first_state =
+  (first_state, 6) ==> collapse_machine toSymbol (first_state + 1) & \m ->
+  (m, first_state + 1) ===> find_first Program.Left fromSymbol (first_state + 2) & \m ->
+  (m, first_state + 2) ===> replace_first_until Program.Right "1" "B" [globalBlank, toSymbol] (first_state + 3) (first_state + 5) & \m ->
+  (m, first_state + 3) ===> find_first Program.Right toSymbol (first_state + 4) & \m ->
+  (m, first_state + 4) ===> shiftr_machine "Z" (first_state + 1) & \m ->
+  (m, first_state + 5) ===> replace_all Program.Left "B" "1" [fromSymbol] success_state
 
 step1 :: StateInt -> StateInt -> Machine
 step1 success_state first_state =
@@ -256,15 +256,22 @@ step5 success_state first_state =
   (m, first_state + 3) ===> shift_one_term Program.Right "Y" (first_state + 4) & \m ->
   (m, first_state + 4) ===> shift_one_term Program.Right "Y" success_state
 
+step6 :: StateInt -> StateInt -> Machine
+step6 success_state first_state =
+  (first_state, 2) ==> find_first Program.Right "Z" (first_state + 1) & \m ->
+  -- (m, first_state + 1) ===> right_machine success_state
+  (m, first_state + 1) ===> substitution_machine "Y" "Z" success_state
+
 
 universal_machine :: StateInt -> StateInt -> Machine
 universal_machine success_state first_state =
-  (first_state, 6) ==> find_first Program.Right "Y" (first_state + 1) & \m ->
+  (first_state, 7) ==> find_first Program.Right "Y" (first_state + 1) & \m ->
   (m, first_state + 1) ===> step1 (first_state + 2)  & \m ->
   (m, first_state + 2) ===> step2 (first_state + 3)  & \m ->
   (m, first_state + 3) ===> step3 (first_state + 4)  & \m ->
-  (m, first_state + 4) ===> step4 (first_state + 5)  & \m -> 
-  (m, first_state + 5) ===> step5 success_state
+  (m, first_state + 4) ===> step4 (first_state + 5)  & \m ->
+  (m, first_state + 5) ===> step5 (first_state + 6)  & \m ->
+  (m, first_state + 6) ===> step6 success_state
 
 
 universal = 
@@ -274,7 +281,7 @@ universal =
 --    let trans = copy_machine "X" "Z" 0 1 in
 --    let trans = copy_machine_rev "Z" "X" 0 1 in
 --    let trans = matching_machine 0 1 2 in
---    let trans = colapse_machine 0 1 in
+--    let trans = collapse_machine 0 1 in
 --    let trans = shiftr_machine 0 1 in
 --    let trans = substitution_machine 0 1 in
    let trans = universal_machine 0 1 in
