@@ -279,17 +279,23 @@ step7 success_state first_state =
   (m, first_state + 4) ===> shift_one_term_left Program.Right "Z" success_state & \m ->
   (m, first_state + 5) ===> shift_one_term_right Program.Right "Z" success_state
 
+step8 :: StateInt -> StateInt -> Machine
+step8 success_state first_state =
+  (first_state, 2) ==> shift_one_term_left Program.Left "Y" (first_state + 1) & \m ->
+  (m, first_state + 1) ===> shift_one_term_left Program.Left "Y" success_state
+
+
 universal_machine :: StateInt -> StateInt -> Machine
 universal_machine success_state first_state =
-  (first_state, 8) ==> find_first Program.Right "Y" (first_state + 1) & \m ->
+  (first_state, 9) ==> find_first Program.Right "Y" (first_state + 1) & \m ->
   (m, first_state + 1) ===> step1 (first_state + 2) & \m ->
   (m, first_state + 2) ===> step2 (first_state + 3) & \m ->
   (m, first_state + 3) ===> step3 (first_state + 4) & \m ->
   (m, first_state + 4) ===> step4 (first_state + 5) & \m ->
   (m, first_state + 5) ===> step5 (first_state + 6) & \m ->
   (m, first_state + 6) ===> step6 (first_state + 7) & \m ->
-  (m, first_state + 7) ===> step7 success_state
-
+  (m, first_state + 7) ===> step7 (first_state + 8) & \m ->
+  (m, first_state + 8) ===> step8 first_state
 
 universal = 
 --    let trans = find_first_until Program.Right "X" [] 0 1 2 in
