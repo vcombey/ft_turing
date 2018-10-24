@@ -212,18 +212,27 @@ step3 success_state first_state =
   (m, first_state + 5) ===> replace_first Program.Right "0" "Y" (first_state + 6) & \m ->
   (m, first_state + 6) ===> find_first Program.Left "X" success_state
 
-shift_one_term :: Direction -> Symbol -> StateInt -> StateInt -> Machine
-shift_one_term dir symbol success_state first_state =
-  (first_state, 4) ==> find_first dir symbol (first_state + 1) & \m ->
+shift_one_term_left :: Direction -> Symbol -> StateInt -> StateInt -> Machine
+shift_one_term_left dir symbol success_state first_state =
+  (first_state, 5) ==> find_first dir symbol (first_state + 1) & \m ->
+  (m, first_state + 1) ===> replace_first Program.Left "0" symbol (first_state + 2) & \m ->
+  (m, first_state + 2) ===> right_machine (first_state + 3) & \m ->
+  (m, first_state + 3) ===> replace_first Program.Right symbol "0" (first_state + 4) & \m ->
+  (m, first_state + 4) ===> find_first Program.Left symbol success_state
+
+shift_one_term_right :: Direction -> Symbol -> StateInt -> StateInt -> Machine
+shift_one_term_right dir symbol success_state first_state =
+  (first_state, 5) ==> find_first dir symbol (first_state + 1) & \m ->
   (m, first_state + 1) ===> replace_first Program.Right "0" symbol (first_state + 2) & \m ->
   (m, first_state + 2) ===> left_machine (first_state + 3) & \m ->
-  (m, first_state + 3) ===> replace_first Program.Left symbol "0" success_state
+  (m, first_state + 3) ===> replace_first Program.Left symbol "0" (first_state + 4) & \m ->
+  (m, first_state + 4) ===> find_first Program.Right symbol success_state
 
 compare_configuration :: StateInt -> StateInt -> StateInt -> Machine
 compare_configuration success_state failed_state first_state =
   (first_state, 7) ==> matching_machine (first_state + 1) (first_state + 5) & \m ->
   (m, first_state + 1) ===> replace_first Program.Right "0" "X" (first_state + 2) & \m ->
-  (m, first_state + 2) ===> shift_one_term Program.Right "Y" (first_state + 3)  & \m ->
+  (m, first_state + 2) ===> shift_one_term_right Program.Right "Y" (first_state + 3)  & \m ->
   (m, first_state + 3) ===> find_first Program.Left "X" (first_state + 4) & \m ->
   (m, first_state + 4) ===> matching_machine (first_state + 6) (first_state + 5) & \m ->
   (m, first_state + 5) ===> replace_first Program.Left "X" "0" failed_state & \m ->
@@ -253,24 +262,33 @@ step5 success_state first_state =
   (first_state, 5) ==> right_machine (first_state + 1) & \m ->
   (m, first_state + 1) ===> find_first Program.Right "0" (first_state + 2) & \m ->
   (m, first_state + 2) ===> replace_all Program.Left "1" "0" ["X"] (first_state + 3) & \m ->
-  (m, first_state + 3) ===> shift_one_term Program.Right "Y" (first_state + 4) & \m ->
-  (m, first_state + 4) ===> shift_one_term Program.Right "Y" success_state
+  (m, first_state + 3) ===> shift_one_term_right Program.Right "Y" (first_state + 4) & \m ->
+  (m, first_state + 4) ===> shift_one_term_right Program.Right "Y" success_state
 
 step6 :: StateInt -> StateInt -> Machine
 step6 success_state first_state =
   (first_state, 2) ==> find_first Program.Right "Z" (first_state + 1) & \m ->
   (m, first_state + 1) ===> substitution_machine "Y" "Z" success_state
 
+step7 :: StateInt -> StateInt -> Machine
+step7 success_state first_state =
+  (first_state, 6) ==> shift_one_term_right Program.Right "Y" (first_state + 1) & \m ->
+  (m, first_state + 1) ===> find_first_until Program.Right "1" ["0"] (first_state + 2) failureState & \m ->
+  (m, first_state + 2) ===> find_first_until Program.Right "1" ["0"] (first_state + 3) (first_state + 4) & \m ->
+  (m, first_state + 3) ===> find_first_until Program.Right "1" ["0"] (first_state + 5) success_state & \m ->
+  (m, first_state + 4) ===> shift_one_term_left Program.Right "Z" success_state & \m ->
+  (m, first_state + 5) ===> shift_one_term_right Program.Right "Z" success_state
 
 universal_machine :: StateInt -> StateInt -> Machine
 universal_machine success_state first_state =
-  (first_state, 7) ==> find_first Program.Right "Y" (first_state + 1) & \m ->
-  (m, first_state + 1) ===> step1 (first_state + 2)  & \m ->
-  (m, first_state + 2) ===> step2 (first_state + 3)  & \m ->
-  (m, first_state + 3) ===> step3 (first_state + 4)  & \m ->
-  (m, first_state + 4) ===> step4 (first_state + 5)  & \m ->
-  (m, first_state + 5) ===> step5 (first_state + 6)  & \m ->
-  (m, first_state + 6) ===> step6 success_state
+  (first_state, 8) ==> find_first Program.Right "Y" (first_state + 1) & \m ->
+  (m, first_state + 1) ===> step1 (first_state + 2) & \m ->
+  (m, first_state + 2) ===> step2 (first_state + 3) & \m ->
+  (m, first_state + 3) ===> step3 (first_state + 4) & \m ->
+  (m, first_state + 4) ===> step4 (first_state + 5) & \m ->
+  (m, first_state + 5) ===> step5 (first_state + 6) & \m ->
+  (m, first_state + 6) ===> step6 (first_state + 7) & \m ->
+  (m, first_state + 7) ===> step7 success_state
 
 
 universal = 
