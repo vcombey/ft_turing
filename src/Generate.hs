@@ -192,11 +192,11 @@ substitution_machine success_state first_state =
 
 step1 :: StateInt -> StateInt -> Machine
 step1 success_state first_state =
-  (first_state, 4) ==> copy_machine_rev "Y" "X" (first_state + 1) & \m ->
+  (first_state, 5) ==> copy_machine_rev "Y" "X" (first_state + 1) & \m ->
   (m, first_state + 1) ===> find_first Program.Left "X" (first_state + 2) & \m ->
   (m, first_state + 2) ===> replace_first Program.Right "0" "X" (first_state + 3) & \m ->
-  --(m, first_state + 3) ===> replace_first Program.Right "Y" "0" (first_state + 4) & \m ->
-  (m, first_state + 3) ===> find_first Program.Right "Z" (success_state)
+  (m, first_state + 3) ===> replace_first Program.Right "Y" "0" (first_state + 4) & \m ->
+  (m, first_state + 4) ===> find_first Program.Right "Z" (success_state)
 
 step2 :: StateInt -> StateInt -> Machine
 step2 success_state first_state =
@@ -204,8 +204,13 @@ step2 success_state first_state =
 
 step3 :: StateInt -> StateInt -> Machine
 step3 success_state first_state =
-  (first_state, 2) ==> replace_first Program.Left "X" "0" (first_state + 1) & \m ->
-  (m, first_state + 1) ===> find_first Program.Left "X" success_state
+  (first_state, 7) ==> replace_first Program.Left "X" "0" (first_state + 1) & \m ->
+  (m, first_state + 1) ===> right_machine (first_state + 2) & \m ->
+  (m, first_state + 2) ===> find_first Program.Right "0" (first_state + 3) & \m ->
+  (m, first_state + 3) ===> find_first Program.Right "1" (first_state + 4) & \m ->
+  (m, first_state + 4) ===> left_machine (first_state + 5) & \m ->
+  (m, first_state + 5) ===> replace_first Program.Right "0" "Y" (first_state + 6) & \m ->
+  (m, first_state + 6) ===> find_first Program.Left "X" success_state
 
 shift_one_term :: Direction -> Symbol -> StateInt -> StateInt -> Machine
 shift_one_term dir symbol success_state first_state =
@@ -243,15 +248,23 @@ step4 success_state first_state =
   (m, first_state + 3) ===> find_first Program.Right "Y" (first_state + 4) & \m -> 
   (m, first_state + 4) ===> find_first_until Program.Right "Z" ["0", "1"] (failureState) (first_state)
 
+step5 :: StateInt -> StateInt -> Machine
+step5 success_state first_state =
+  (first_state, 5) ==> right_machine (first_state + 1) & \m ->
+  (m, first_state + 1) ===> find_first Program.Right "0" (first_state + 2) & \m ->
+  (m, first_state + 2) ===> replace_all Program.Left "1" "0" ["X"] (first_state + 3) & \m ->
+  (m, first_state + 3) ===> shift_one_term Program.Right "Y" (first_state + 4) & \m ->
+  (m, first_state + 4) ===> shift_one_term Program.Right "Y" success_state
+
 
 universal_machine :: StateInt -> StateInt -> Machine
 universal_machine success_state first_state =
-  (first_state, 5) ==> find_first Program.Right "Y" (first_state + 1) & \m ->
-  (m, first_state + 1) ===> step1 (first_state + 2) & \m ->
+  (first_state, 6) ==> find_first Program.Right "Y" (first_state + 1) & \m ->
+  (m, first_state + 1) ===> step1 (first_state + 2)  & \m ->
   (m, first_state + 2) ===> step2 (first_state + 3)  & \m ->
   (m, first_state + 3) ===> step3 (first_state + 4)  & \m ->
-  (m, first_state + 4) ===> step4 success_state  
-  
+  (m, first_state + 4) ===> step4 (first_state + 5)  & \m -> 
+  (m, first_state + 5) ===> step5 success_state
 
 
 universal = 
