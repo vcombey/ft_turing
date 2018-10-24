@@ -259,7 +259,6 @@ step5 success_state first_state =
 step6 :: StateInt -> StateInt -> Machine
 step6 success_state first_state =
   (first_state, 2) ==> find_first Program.Right "Z" (first_state + 1) & \m ->
-  -- (m, first_state + 1) ===> right_machine success_state
   (m, first_state + 1) ===> substitution_machine "Y" "Z" success_state
 
 
