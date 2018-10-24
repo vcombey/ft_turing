@@ -93,15 +93,15 @@ compose_function f1 f2 global_success global_failure first_state =
      (first_state, 2) ==> f1 (first_state + 1) global_failure & \m ->
      (m, first_state + 1) ===> f2 (global_success) (global_failure)
     
-copy_machine :: StateInt -> StateInt -> Symbol -> Symbol -> Machine
-copy_machine success_state first_state fromSymb toSymb =
+copy_machine :: Symbol -> Symbol -> StateInt -> StateInt -> Machine
+copy_machine fromSymb toSymb success_state first_state =
   ((first_state, 4) ==> replace_first_until Program.Right "1" "B" [toSymb, globalBlank] (first_state + 1) (first_state + 3)) & \m ->
   (m, first_state + 1) ===> compose_function (find_first_until Program.Right toSymb []) (replace_first_until Program.Right "0" "1" []) (first_state + 2) failureState & \m ->
   (m, first_state + 2) ===> find_first Program.Left "B" (first_state) & \m ->
   (m, first_state + 3) ===> replace_all Program.Left "B" "1" [fromSymb] success_state
 
-copy_machine_rev :: StateInt -> StateInt -> Symbol -> Symbol -> Machine
-copy_machine_rev success_state first_state fromSymb toSymb =
+copy_machine_rev :: Symbol -> Symbol -> StateInt -> StateInt -> Machine
+copy_machine_rev fromSymb toSymb success_state first_state =
   ((first_state, 4) ==> find_first Program.Right fromSymb (first_state + 1) & \m ->
   (m, first_state + 1) ===> replace_first_until Program.Right "1" "B" [globalBlank] (first_state + 2) (first_state + 3)) & \m ->
   (m, first_state + 2) ===> compose_function (find_first_until Program.Left toSymb []) (replace_first_until Program.Right "0" "1" []) (first_state) failureState & \m ->
@@ -181,16 +181,32 @@ substitution_machine success_state first_state =
   (m, first_state + 5) ===> replace_all Program.Left "B" "1" ["X"] success_state
 
 
+
+step1 :: StateInt -> StateInt -> Machine
+step1 success_state first_state =
+  (first_state, 5) ==> copy_machine_rev "Y" "X" (first_state + 1) & \m ->
+  (m, first_state + 1) ===> find_first Program.Left "X" (first_state + 2) & \m ->
+  (m, first_state + 2) ===> replace_first Program.Right "0" "X" (first_state + 3) & \m ->
+  (m, first_state + 3) ===> replace_first Program.Right "Y" "0" (first_state + 4) & \m ->
+  (m, first_state + 4) ===> find_first Program.Right "Z" (success_state)
+
+universal_machine :: StateInt -> StateInt -> Machine
+universal_machine success_state first_state =
+  (first_state, 2) ==> find_first Program.Right "Y" (first_state + 1) & \m ->
+  (m, first_state + 1) ===> step1 success_state
+
+
 universal = 
 --    let trans = find_first_until Program.Right "X" [] 0 1 2 in
 --    let trans = replace_first_until Program.Right "X" "B" [] 0 1 2 in
 --    let trans = replace_all Program.Right "X" "B" ["Z"] 0 1 in
---    let trans = copy_machine 0 1 "X" "Z" in
-    let trans = copy_machine_rev 0 1 "Z" "X" in
+--    let trans = copy_machine "X" "Z" 0 1 in
+--    let trans = copy_machine_rev "Z" "X" 0 1 in
 --    let trans = matching_machine 0 1 2 in
 --    let trans = colapse_machine 0 1 in
 --    let trans = shiftr_machine 0 1 in
 --    let trans = substitution_machine 0 1 in
+   let trans = universal_machine 0 1 in
    Program {
         name="Turing'ception"
         , alphabet = globalAlphabet ++ ["."]
