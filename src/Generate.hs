@@ -222,15 +222,20 @@ shift_one_term_left dir symbol success_state first_state =
 
 shift_one_term_right :: Direction -> Symbol -> StateInt -> StateInt -> Machine
 shift_one_term_right dir symbol success_state first_state =
-  (first_state, 5) ==> find_first dir symbol (first_state + 1) & \m ->
+  (first_state, 10) ==> find_first dir symbol (first_state + 1) & \m ->
   (m, first_state + 1) ===> replace_first Program.Right "0" symbol (first_state + 2) & \m ->
-  (m, first_state + 2) ===> left_machine (first_state + 3) & \m ->
-  (m, first_state + 3) ===> replace_first Program.Left symbol "0" (first_state + 4) & \m ->
-  (m, first_state + 4) ===> find_first Program.Right symbol success_state
+  (m, first_state + 2) ===> find_first_until Program.Right "." ["0", "1"] (first_state + 6) (first_state + 9) & \m ->
+  (m, first_state + 3) ===> left_machine (first_state + 4) & \m ->
+  (m, first_state + 4) ===> replace_first Program.Left symbol "0" (first_state + 5) & \m ->
+  (m, first_state + 5) ===> find_first Program.Right symbol success_state & \m ->
+  (m, first_state + 6) ===> replace_first Program.Right "." "1" (first_state + 7) & \m ->
+  (m, first_state + 7) ===> replace_first Program.Right "." "0" (first_state + 8) & \m ->
+  (m, first_state + 8) ===> left_machine (first_state + 9) & \m ->
+  (m, first_state + 9) ===> left_machine (first_state + 3)
 
 compare_configuration :: StateInt -> StateInt -> StateInt -> Machine
 compare_configuration success_state failed_state first_state =
-  (first_state, 7) ==> matching_machine (first_state + 1) (first_state + 5) & \m ->
+  (first_state, 7) ==> matching_machine (first_state + 1) failed_state & \m -> -- ATTENTION (first_state + 5) & \m ->
   (m, first_state + 1) ===> replace_first Program.Right "0" "X" (first_state + 2) & \m ->
   (m, first_state + 2) ===> shift_one_term_right Program.Right "Y" (first_state + 3)  & \m ->
   (m, first_state + 3) ===> find_first Program.Left "X" (first_state + 4) & \m ->
@@ -276,7 +281,7 @@ step7 success_state first_state =
   (m, first_state + 1) ===> find_first_until Program.Right "1" ["0"] (first_state + 2) failureState & \m ->
   (m, first_state + 2) ===> find_first_until Program.Right "1" ["0"] (first_state + 3) (first_state + 4) & \m ->
   (m, first_state + 3) ===> find_first_until Program.Right "1" ["0"] (first_state + 5) success_state & \m ->
-  (m, first_state + 4) ===> shift_one_term_left Program.Right "Z" success_state & \m ->
+  (m, first_state + 4) ===> shift_one_term_left Program.Left "Z" success_state & \m ->
   (m, first_state + 5) ===> shift_one_term_right Program.Right "Z" success_state
 
 step8 :: StateInt -> StateInt -> Machine
