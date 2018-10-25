@@ -12,40 +12,33 @@ import Generate
 
 universal = encodeFile "universal_turing_machine.json" Generate.universal
 
-check_program_input file input = ((decodeFileStrict file) :: IO (Maybe Program.Program)) >>=
-       \decoded -> case decoded of
-         Just program -> 
-           let tape = Tape.fromString input in
-           case (Program.check program) of
-             Left (mess) -> (putStrLn (Program.prettyProgram program) >> putStrLn ("bad program: " ++ mess)) >> return Nothing
-             Right () -> if not (Tape.check tape program) then putStrLn "all char in initial tape don't belongs to (alphabet \\ blank)" >> return Nothing else return (Just (program, tape))
-         Nothing -> putStrLn "parsing error" >> return (Nothing)
-
-encodeInputUTM file input  = ((decodeFileStrict file) :: IO (Maybe Program.Program)) >>=
-       \decoded -> case decoded of
-         Just program -> putStrLn $ show (Program.transpileProgram program input)
-         Nothing -> putStrLn "parsing error"
-
-decodeOutputUTM last = do  
-    line <- getLine
-    if line !! 0 == 'T' then
-        let split1 = Split.splitOn "Z" last in
-        let tape = split1 !! 1 in
-        let split2 = Split.splitOn "<" tape in
-        let output = split2 !! 0 in
-        putStrLn output
-    else
-        Main.decodeOutputUTM line
-    
-
-start file input = ((decodeFileStrict file) :: IO (Maybe Program.Program)) >>=
+parse_input file input on_success = ((decodeFileStrict file) :: IO (Maybe Program.Program)) >>=
        \decoded -> case decoded of
          Just program -> 
            let tape = Tape.fromString input in
            case (Program.check program) of
              Left (mess) -> (putStrLn (Program.prettyProgram program) >> putStrLn ("bad program: " ++ mess))
-             Right () -> if not (Tape.check tape program) then putStrLn "all char in initial tape don't belongs to (alphabet \\ blank)" else putStrLn (Program.prettyProgram program) >> Machine.execute tape program
+             Right () -> if not (Tape.check tape program)
+                           then putStrLn "all char in initial tape don't belongs to (alphabet \\ blank)"
+                           else on_success program tape
          Nothing -> putStrLn "parsing error"
+
+encodeInputUTM file input  = 
+    parse_input file input (\program tape -> putStrLn $ show (Program.transpileProgram program input))
+
+decodeOutputUTM file last_line = do  
+    line <- getLine
+    if line !! 0 == 'T' then
+        let split1 = Split.splitOn "Z" last_line in
+        let tape = split1 !! 1 in
+        let split2 = Split.splitOn "<" tape in
+        let output = split2 !! 0 in
+        parse_input file "" (\program tape -> putStrLn $ show (Program.decodeTape program output))
+    else
+        Main.decodeOutputUTM file line
+    
+start file input =
+    parse_input file input (\program tape -> putStrLn (Program.prettyProgram program) >> Machine.execute tape program)
 
 main :: IO ()
 main = getArgs >>= parse
@@ -54,7 +47,7 @@ main = getArgs >>= parse
 parse x | x == ["-h"] || x == ["--help"] = usage >> exitWith ExitSuccess
 parse x | x == ["-u"] || x == ["--universal"] = Main.universal
 parse (x:file:input:[]) | x == "-e" || x == "--encode" = encodeInputUTM file input
-parse x | x == ["-d"] || x == ["--decode"] = Main.decodeOutputUTM "start"
+parse (x:file:[]) | x == "-d" || x == "--decode" = Main.decodeOutputUTM file ""
 
 parse []     = usage >> exitWith (ExitFailure 1)
 parse (_:[]) = usage >> exitWith (ExitFailure 1)

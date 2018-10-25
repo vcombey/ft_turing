@@ -12,6 +12,7 @@ module Program
   , prettyTransition
   , reverseDir
   , transpileProgram
+  , decodeTape
   )
   where 
 
@@ -159,16 +160,16 @@ getEncodeSymbol p =
   transpileSymbol symb_to_code
 
 decodeSymbol :: [(String, String)] -> String -> String
-decodeSymbol code_to_state s =
-  case List.lookup s code_to_state of
-  Just res -> res
-  Nothing -> error "Maybe.fromJust: Nothing" 
+decodeSymbol code_to_symb code =
+  case List.lookup code code_to_symb of
+   Just res -> res
+   Nothing -> error "Maybe.fromJust: Nothing" 
   
 getDecodeSymbol :: Program -> (Symbol -> String)
 getDecodeSymbol p =
   let new_alphabet = (blank p) : (List.filter (blank p /= ) (alphabet p)) in
-  let symb_to_code = List.map (\(s, i) -> (replicate i '1', s)) (new_alphabet `List.zip` [1..]) in
-  transpileSymbol symb_to_code
+  let code_to_symb = List.map (\(s, i) -> (replicate i '1', s)) (new_alphabet `List.zip` [1..]) in
+  decodeSymbol code_to_symb
 
 getEncodeStates :: Program -> (State -> String)
 getEncodeStates p = 
@@ -190,6 +191,6 @@ transpileProgram p input =
 
 decodeTape :: Program -> String -> String
 decodeTape p s =
-  let split_zero = Split.splitOn "0" s in
+  let split_zero = List.filter ("" /=) $ Split.splitOn "0" s in
   let decodeSymb = getDecodeSymbol p in
   concat $ List.map decodeSymb split_zero
