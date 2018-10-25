@@ -33,9 +33,9 @@ decodeOutputUTM file last_line = do
         let tape = split1 !! 1 in
         let split2 = Split.splitOn "<" tape in
         let output = split2 !! 0 in
-        parse_input file "" (\program tape -> putStrLn $ show (Program.decodeTape program output))
+        parse_input file "" (\program tape -> putStrLn $ Program.decodeTape program output)
     else
-        Main.decodeOutputUTM file line
+        putStrLn line >> Main.decodeOutputUTM file line
     
 start file input =
     parse_input file input (\program tape -> putStrLn (Program.prettyProgram program) >> Machine.execute tape program)
