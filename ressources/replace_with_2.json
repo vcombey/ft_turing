@@ -1,0 +1,22 @@
+{
+	"name"    : "sample",
+	"alphabet": [ "1", "2",".", "3", "X"],
+	"blank"   : ".",
+	"states"  : [ "replace_1_with_2", "replace_end_with_3", "HALT" ],
+	"initial" : "replace_1_with_2",
+	"finals"  : [ "HALT" ],
+	"transitions" : {
+		"replace_1_with_2": [
+			{ "read" : "X", "to_state": "replace_1_with_2", "write": "X", "action": "RIGHT"},
+			{ "read" : "1", "to_state": "replace_1_with_2", "write": "2", "action": "RIGHT"},
+			{ "read" : "2", "to_state": "replace_1_with_2", "write": "2", "action": "RIGHT"},
+			{ "read" : "3", "to_state": "replace_1_with_2", "write": "3", "action": "RIGHT"},
+			{ "read" : ".", "to_state": "replace_end_with_3", "write": ".", "action": "LEFT"}
+		],
+		"replace_end_with_3": [
+			{ "read" : "1", "to_state": "HALT", "write": "3", "action": "NONE"},
+			{ "read" : "2", "to_state": "HALT", "write": "3", "action": "NONE"},
+			{ "read" : "3", "to_state": "HALT", "write": "3", "action": "NONE"}
+		]
+	}
+}

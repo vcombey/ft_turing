@@ -10,16 +10,35 @@ module Program
   , getTransition
   , prettyProgram
   , prettyTransition
+  , reverseDir
+  , transpileProgram
+  , decodeTape
   )
   where 
 
 import GHC.Generics
 import Data.Aeson
 import qualified Data.List as List
-import Data.Text  (unpack)
+import Data.Text  (unpack, pack)
 import Data.HashMap.Strict as HashMap
+import qualified Data.List.Split as Split
 
 data Direction = Left | Right | None deriving (Show, Generic)
+instance ToJSON Direction where
+   toJSON (dir) = String (case dir of
+     Program.Left -> pack "LEFT"
+     Program.Right -> pack "RIGHT"
+     Program.None -> pack "NONE")
+
+reverseDir dir = case dir of
+     Program.Left -> Program.Right
+     Program.Right -> Program.Left
+     Program.None -> Program.None
+
+transpileDirection dir = case dir of
+     Program.Left -> "1"
+     Program.None -> "11"
+     Program.Right -> "111"
 
 instance FromJSON Direction where
   parseJSON = withText "Direction" $ \s -> case unpack s of
@@ -28,7 +47,18 @@ instance FromJSON Direction where
     "NONE" -> return Program.None
   
 type State = String
+
+transpileState state_to_code s = 
+  case List.lookup s state_to_code of
+  Just res -> res
+  Nothing -> error "Maybe.fromJust: Nothing" 
+
 type Symbol = String
+
+transpileSymbol symb_to_code sym = 
+  case List.lookup sym symb_to_code of
+  Just res -> res
+  Nothing -> error "Maybe.fromJust: Nothing" 
 
 data Transition = Transition {
   read :: Symbol
@@ -37,7 +67,21 @@ data Transition = Transition {
   , action :: Direction
 } deriving (Show, Generic)
 instance FromJSON Transition
+instance ToJSON Transition
 
+transpileTransition :: State -> Transition -> (Symbol -> String) -> (State -> String) -> String
+transpileTransition state trans transSym transState =
+  transState state ++
+  "0" ++
+  transSym (Program.read trans) ++
+  "0" ++
+  transState (Program.to_state trans) ++
+  "0" ++
+  transSym (Program.write trans) ++
+  "0" ++
+  transpileDirection (Program.action trans) ++
+  "00" 
+  
 prettyTransition state t =
   "(" ++ state ++ ", " ++ (Program.read t) ++ ") -> (" ++ (to_state t) ++ ", " ++ (write t) ++ ", " ++ (show (action t)) ++ ")"
  
@@ -48,9 +92,10 @@ data Program = Program {
     , states :: [State]
     , initial :: State
     , finals :: [State]
-   , transitions :: HashMap State [Transition]
+    , transitions :: HashMap State [Transition]
 } deriving (Show, Generic)
 instance FromJSON Program
+instance ToJSON Program
 
 prettyProgram p =
         divider                           ++ "\n" ++
@@ -86,13 +131,16 @@ prettyProgram p =
 
 
 --Check that the program is well formed
-check :: Program -> Bool
+check :: Program -> Either String ()
 check t =
-    belongToStates (initial t)
-    && List.all (\x -> length x == 1) (alphabet t)
-    && List.all belongToStates (finals t)
-    && belongToAlphabet (blank t)
-    && List.all (checkTransition) (toList $ transitions t)
+    if not (belongToStates (initial t)) then Prelude.Left ("Initial don't belong to states")
+    else if not (List.all (\x -> length x == 1) (alphabet t)) then Prelude.Left ("All Symbol are not Characters")
+    else if not (List.all belongToStates (finals t)) then Prelude.Left ("All finals don't belong to states")
+    else if not (belongToAlphabet (blank t)) then Prelude.Left ("blank dont belong to alphabet")
+    else
+      case (List.find (not . checkTransition) (toList $ transitions t)) of
+        Just invalid_trans -> Prelude.Left ("Transition not valable" ++ (show invalid_trans))
+        Nothing -> Prelude.Right ()
     where belongToStates s = elem s (states t)
           belongToAlphabet s = elem s (alphabet t)
           checkTransition (n, trans) = belongToStates n
@@ -105,3 +153,44 @@ getTransition :: Program -> State -> Symbol -> Maybe Transition
 getTransition p state symbol = HashMap.lookup state (transitions p)
   >>= \list_transition -> List.find (\x -> Program.read x == symbol) list_transition
 
+getEncodeSymbol :: Program -> (Symbol -> String)
+getEncodeSymbol p =
+  let new_alphabet = (blank p) : (List.filter (blank p /= ) (alphabet p)) in
+  let symb_to_code = List.map (\(s, i) -> (s, replicate i '1')) (new_alphabet `List.zip` [1..]) in
+  transpileSymbol symb_to_code
+
+decodeSymbol :: [(String, String)] -> String -> String
+decodeSymbol code_to_symb code =
+  case List.lookup code code_to_symb of
+   Just res -> res
+   Nothing -> error "Maybe.fromJust: Nothing" 
+  
+getDecodeSymbol :: Program -> (Symbol -> String)
+getDecodeSymbol p =
+  let new_alphabet = (blank p) : (List.filter (blank p /= ) (alphabet p)) in
+  let code_to_symb = List.map (\(s, i) -> (replicate i '1', s)) (new_alphabet `List.zip` [1..]) in
+  decodeSymbol code_to_symb
+
+getEncodeStates :: Program -> (State -> String)
+getEncodeStates p = 
+  let new_states = (initial p) : (List.filter (initial p /= ) (states p)) in
+  let states_to_code = List.map (\(s, i) -> (s, replicate i '1')) (new_states `List.zip` [1..]) in
+  transpileState states_to_code
+
+transpileProgram :: Program -> String -> String
+transpileProgram p input =
+  let transSymb = getEncodeSymbol p in
+  let transState = getEncodeStates p in
+  let concat_strings strings = List.foldl' (\acc b -> acc ++ b) "" strings in
+  let l = List.map (\(key, list_transition) -> (transState key, (concat_strings [transpileTransition key t transSymb transState | t <- list_transition]))) (HashMap.toList $ transitions p) in
+  let sorted = List.sortOn (\(key,_) -> length key) l in
+  "F" ++ (concat_strings (List.map (\s -> transState s ++ "0") (finals p))) ++
+  "X" ++ replicate ((List.length $ alphabet p) + (List.length $ states p) + 2) '0' ++
+  "Y" ++ (concat $ List.map (\(_, s) -> s) sorted) ++ "0" ++
+  "Z" ++ (List.concat $ (List.map (\c -> transSymb [c] ++ "0") input))
+
+decodeTape :: Program -> String -> String
+decodeTape p s =
+  let split_zero = List.filter ("" /=) $ Split.splitOn "0" s in
+  let decodeSymb = getDecodeSymbol p in
+  concat $ List.map decodeSymb split_zero

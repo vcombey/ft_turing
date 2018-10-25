@@ -1,3 +1,5 @@
 .stack-work/
 ft-turing.cabal
 *~
+universal_turing_machine.json
+ft_turing
