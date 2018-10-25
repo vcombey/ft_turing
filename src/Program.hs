@@ -183,9 +183,9 @@ transpileProgram p input =
   let transState = getEncodeStates p in
   let concat_strings strings = List.foldl' (\acc b -> acc ++ b) "" strings in
   let l = List.map (\(key, list_transition) -> (transState key, (concat_strings [transpileTransition key t transSymb transState | t <- list_transition]))) (HashMap.toList $ transitions p) in
- -- in show l
   let sorted = List.sortOn (\(key,_) -> length key) l in
-  "X" ++ replicate ((List.length $ alphabet p) + (List.length $ states p) + 2) '0' ++ 
+  "F" ++ (concat_strings (List.map (\s -> transState s ++ "0") (finals p))) ++
+  "X" ++ replicate ((List.length $ alphabet p) + (List.length $ states p) + 2) '0' ++ "0" ++
   "Y" ++ (concat $ List.map (\(_, s) -> s) sorted)
   ++ "Z" ++ (List.concat $ (List.map (\c -> transSymb [c] ++ "0") input))
 
