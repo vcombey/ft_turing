@@ -31,9 +31,9 @@ decodeOutputUTM file last_line = do
     if line !! 0 == 'T' then
         let split1 = Split.splitOn "Z" last_line in
         let tape = split1 !! 1 in
-        let split2 = Split.splitOn "<" tape in
+        let split2 = Split.splitOn "." tape in
         let output = split2 !! 0 in
-        parse_input file "" (\program tape -> putStrLn $ Program.decodeTape program output)
+        parse_input file "" (\program tape -> putStrLn $ (line ++ "\n" ++ Program.decodeTape program output))
     else
         putStrLn line >> Main.decodeOutputUTM file line
     

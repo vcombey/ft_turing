@@ -32,7 +32,7 @@ execute tape program =
      if state `elem` (finals program)
      then do
        putStr $ prettyTape tape (blank program) cell
-       putStrLn "\nThe Turing Machine Succeed"
+       putStrLn ("\nThe Turing Machine Succeed in " ++ (show $ length acc_step) ++ " step")
      else (let curr_symb = readSymbol cell (blank program) tape in
          case getTransition program state curr_symb of
          Nothing -> do putStr $ prettyTape tape (blank program) cell
