@@ -20,10 +20,18 @@ check_program_input file input = ((decodeFileStrict file) :: IO (Maybe Program.P
              Right () -> if not (Tape.check tape program) then putStrLn "all char in initial tape don't belongs to (alphabet \\ blank)" >> return Nothing else return (Just (program, tape))
          Nothing -> putStrLn "parsing error" >> return (Nothing)
 
-transpile file input  = ((decodeFileStrict file) :: IO (Maybe Program.Program)) >>=
+encodeInputUTM file input  = ((decodeFileStrict file) :: IO (Maybe Program.Program)) >>=
        \decoded -> case decoded of
          Just program -> putStrLn $ show (Program.transpileProgram program input)
          Nothing -> putStrLn "parsing error"
+
+decodeOutputUTM last = do  
+    line <- getLine
+    if line !! 0 == 'T' then
+        putStrLn last
+    else
+        Main.decodeOutputUTM line
+    
 
 start file input = ((decodeFileStrict file) :: IO (Maybe Program.Program)) >>=
        \decoded -> case decoded of
@@ -36,19 +44,27 @@ start file input = ((decodeFileStrict file) :: IO (Maybe Program.Program)) >>=
 
 main :: IO ()
 main = getArgs >>= parse
+
  
 parse x | x == ["-h"] || x == ["--help"] = usage >> exitWith ExitSuccess
 parse x | x == ["-u"] || x == ["--universal"] = Main.universal
-parse (x:file:input:[]) | x == "-t" || x == "--transpile" = transpile file input
+parse (x:file:input:[]) | x == "-e" || x == "--encode" = encodeInputUTM file input
+parse x | x == ["-d"] || x == ["--decode"] = Main.decodeOutputUTM "start"
+
 parse []     = usage >> exitWith (ExitFailure 1)
 parse (_:[]) = usage >> exitWith (ExitFailure 1)
+
 parse (file:input:[]) = start file input
+
 parse _     = usage >> exitWith (ExitFailure 1)
 
-usage = putStrLn "Usage ft_turing [-h] jsonfile input\n\n\
+usage = putStrLn "Usage ft_turing [-h | -u | -e | -d] jsonfile input\n\n\
                     \positional arguments:\n\
-                    \jsonfile              json description of the machine\n\
-                    \input                 input of the machine\n\n\
+                    \  jsonfile              json description of the machine\n\
+                    \  input                 input of the machine\n\n\
                     \optional arguments:\n\
-                    \-h, --help            show this help message and exit\n"
+                    \  -h, --help            show this help message and exit\n\
+                    \  -u, --universal       generate universal turing machine\n\
+                    \  -e, --encode          encode the input of the univeral turing machine\n\
+                    \  -d, --decode          decode the output of the universal turing machine\n"
 

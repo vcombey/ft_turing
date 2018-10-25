@@ -243,19 +243,28 @@ compare_configuration success_state failed_state first_state =
   (m, first_state + 5) ===> replace_first Program.Left "X" "0" failed_state & \m ->
   (m, first_state + 6) ===> replace_first Program.Left "X" "0" success_state
 
+end_machine :: StateInt -> Machine
+end_machine first_state =
+  (first_state, 5) ==> replace_first Program.Right "0" "Z" (first_state + 1) & \m ->
+  (m, first_state + 1) ===> right_machine (first_state + 2) & \m ->
+  (m, first_state + 2) ===> shift_one_term_right Program.Right "Z" (first_state + 3) & \m ->
+  (m, first_state + 3) ===> replace_first Program.Right "Z" "0" (first_state + 4) & \m ->
+  (m, first_state + 4) ===> find_first Program.Right "." failureState
+
 next_configuration :: StateInt -> StateInt -> Machine
 next_configuration success_state first_state =
-  (first_state, 8) ==> find_first Program.Right "Y" (first_state + 1) & \m ->
+  (first_state, 9) ==> find_first Program.Right "Y" (first_state + 1) & \m ->
   (m, first_state + 1) ===> find_first Program.Right "0" (first_state + 2) & \m ->
   (m, first_state + 2) ===> right_machine (first_state + 3) & \m ->
   (m, first_state + 3) ===> machine_with_transition (
                 [newTransition "0" "Y" Program.Right (first_state + 4)]
                 ++ (not_letter ["0"] (newTransition "" "" Program.Right (first_state + 1)))
                 ) & \m ->
-  (m, first_state + 4) ===> find_first_until Program.Right "0" ["1"] failureState (first_state + 5) & \m ->
+  (m, first_state + 4) ===> find_first_until Program.Right "0" ["1"] (first_state + 8) (first_state + 5) & \m ->
   (m, first_state + 5) ===> find_first Program.Left "Y" (first_state + 6) & \m ->
   (m, first_state + 6) ===> left_machine (first_state + 7) & \m ->
-  (m, first_state + 7) ===> replace_first Program.Left "Y" "0" success_state
+  (m, first_state + 7) ===> replace_first Program.Left "Y" "0" success_state & \m ->
+  (m, first_state + 8) ===> end_machine
 
 step4 :: StateInt -> StateInt -> Machine
 step4 success_state first_state =

@@ -25,6 +25,7 @@ dependencies:
 - aeson
 - unordered-containers
 - text
+- split
 
 library:
   source-dirs: src
