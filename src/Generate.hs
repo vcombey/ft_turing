@@ -221,6 +221,14 @@ shift_one_term_left dir symbol success_state first_state =
   (m, first_state + 3) ===> replace_first Program.Right symbol "0" (first_state + 4) & \m ->
   (m, first_state + 4) ===> find_first Program.Left symbol success_state
 
+simple_shift_one_term_right :: Direction -> Symbol -> StateInt -> StateInt -> Machine
+simple_shift_one_term_right dir symbol success_state first_state =
+  (first_state, 5) ==> find_first dir symbol (first_state + 1) & \m ->
+  (m, first_state + 1) ===> replace_first Program.Right "0" symbol (first_state + 2) & \m ->
+  (m, first_state + 2) ===> left_machine (first_state + 3) & \m ->
+  (m, first_state + 3) ===> replace_first Program.Left symbol "0" (first_state + 4) & \m ->
+  (m, first_state + 4) ===> find_first Program.Right symbol success_state
+
 shift_one_term_right :: Direction -> Symbol -> StateInt -> StateInt -> Machine
 shift_one_term_right dir symbol success_state first_state =
   (first_state, 10) ==> find_first dir symbol (first_state + 1) & \m ->
@@ -246,8 +254,10 @@ compare_configuration success_state failed_state first_state =
 
 check_final_state :: StateInt -> Machine
 check_final_state first_state =
-  (first_state, 2) ==> find_first Program.Left "F" (first_state + 1) & \m ->
-  (m, first_state + 1) ===> matching_machine "F" "X" (globalSuccessState) (globalFailureState)
+  (first_state, 4) ==> find_first Program.Left "F" (first_state + 1) & \m ->
+  (m, first_state + 1) ===> matching_machine "F" "X" (globalSuccessState) (first_state + 2) & \m ->
+  (m, first_state + 2) ===> simple_shift_one_term_right Program.Left "F" (first_state + 3) & \m ->
+  (m, first_state + 3) ===> find_first_until Program.Right "X" ["1"] (globalFailureState) (first_state)
 
 end_machine :: StateInt -> Machine
 end_machine first_state =
