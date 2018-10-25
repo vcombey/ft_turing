@@ -20,6 +20,7 @@ import Data.Aeson
 import qualified Data.List as List
 import Data.Text  (unpack, pack)
 import Data.HashMap.Strict as HashMap
+import qualified Data.List.Split as Split
 
 data Direction = Left | Right | None deriving (Show, Generic)
 instance ToJSON Direction where
@@ -151,22 +152,44 @@ getTransition :: Program -> State -> Symbol -> Maybe Transition
 getTransition p state symbol = HashMap.lookup state (transitions p)
   >>= \list_transition -> List.find (\x -> Program.read x == symbol) list_transition
 
+getEncodeSymbol :: Program -> (Symbol -> String)
+getEncodeSymbol p =
+  let new_alphabet = (blank p) : (List.filter (blank p /= ) (alphabet p)) in
+  let symb_to_code = List.map (\(s, i) -> (s, replicate i '1')) (new_alphabet `List.zip` [1..]) in
+  transpileSymbol symb_to_code
+
+decodeSymbol :: [(String, String)] -> String -> String
+decodeSymbol code_to_state s =
+  case List.lookup s code_to_state of
+  Just res -> res
+  Nothing -> error "Maybe.fromJust: Nothing" 
+  
+getDecodeSymbol :: Program -> (Symbol -> String)
+getDecodeSymbol p =
+  let new_alphabet = (blank p) : (List.filter (blank p /= ) (alphabet p)) in
+  let symb_to_code = List.map (\(s, i) -> (replicate i '1', s)) (new_alphabet `List.zip` [1..]) in
+  transpileSymbol symb_to_code
+
+getEncodeStates :: Program -> (State -> String)
+getEncodeStates p = 
+  let new_states = (initial p) : (List.filter (initial p /= ) (states p)) in
+  let states_to_code = List.map (\(s, i) -> (s, replicate i '1')) (new_states `List.zip` [1..]) in
+  transpileState states_to_code
 
 transpileProgram :: Program -> String -> String
 transpileProgram p input =
-  let new_alphabet = (blank p) : (List.filter (blank p /= ) (alphabet p)) in
-  let symb_to_code = List.map (\(s, i) -> (s, replicate i '1')) (new_alphabet `List.zip` [1..]) in
-  let new_states = (initial p) : (List.filter (initial p /= ) (states p)) in
-  let states_to_code = List.map (\(s, i) -> (s, replicate i '1')) (new_states `List.zip` [1..]) in
-  let state_index state = List.find (\(s, i) -> s == state) states_to_code in
+  let transSymb = getEncodeSymbol p in
+  let transState = getEncodeStates p in
   let concat_strings strings = List.foldl' (\acc b -> acc ++ b) "" strings in
-  let l = List.map (\(key, list_transition) -> (key, (concat_strings [transpileTransition key t (transpileSymbol symb_to_code) (transpileState states_to_code) | t <- list_transition]))) (HashMap.toList $ transitions p) in
+  let l = List.map (\(key, list_transition) -> (transState key, (concat_strings [transpileTransition key t transSymb transState | t <- list_transition]))) (HashMap.toList $ transitions p) in
  -- in show l
-  let sorted = List.sortOn (\(key,_) -> case state_index key of
-                                           Just (_, i) -> i
-                                           Nothing -> error "blabla") l in
+  let sorted = List.sortOn (\(key,_) -> length key) l in
   "X" ++ replicate ((List.length $ alphabet p) + (List.length $ states p) + 2) '0' ++ 
   "Y" ++ (concat $ List.map (\(_, s) -> s) sorted)
-  ++ "Z" ++ (List.concat $ (List.map (\c -> transpileSymbol symb_to_code [c] ++ "0") input))
+  ++ "Z" ++ (List.concat $ (List.map (\c -> transSymb [c] ++ "0") input))
 
-  
+decodeTape :: Program -> String -> String
+decodeTape p s =
+  let split_zero = Split.splitOn "0" s in
+  let decodeSymb = getDecodeSymbol p in
+  concat $ List.map decodeSymb split_zero
