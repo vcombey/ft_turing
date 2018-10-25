@@ -1,6 +1,7 @@
 module Main where
 
 import qualified Data.Map as Map
+import qualified Data.List.Split as Split
 import qualified Program 
 import qualified Machine 
 import qualified Tape 
@@ -28,7 +29,11 @@ encodeInputUTM file input  = ((decodeFileStrict file) :: IO (Maybe Program.Progr
 decodeOutputUTM last = do  
     line <- getLine
     if line !! 0 == 'T' then
-        putStrLn last
+        let split1 = Split.splitOn "Z" last in
+        let tape = split1 !! 1 in
+        let split2 = Split.splitOn "<" tape in
+        let output = split2 !! 0 in
+        putStrLn output
     else
         Main.decodeOutputUTM line
     
