@@ -186,8 +186,8 @@ transpileProgram p input =
  -- in show l
   let sorted = List.sortOn (\(key,_) -> length key) l in
   "X" ++ replicate ((List.length $ alphabet p) + (List.length $ states p) + 2) '0' ++ 
-  "Y" ++ (concat $ List.map (\(_, s) -> s) sorted)
-  ++ "Z" ++ (List.concat $ (List.map (\c -> transSymb [c] ++ "0") input))
+  "Y" ++ (concat $ List.map (\(_, s) -> s) sorted) ++ "0" ++
+  "Z" ++ (List.concat $ (List.map (\c -> transSymb [c] ++ "0") input))
 
 decodeTape :: Program -> String -> String
 decodeTape p s =

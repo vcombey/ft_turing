@@ -287,6 +287,55 @@ step6 success_state first_state =
   (first_state, 2) ==> find_first Program.Right "Z" (first_state + 1) & \m ->
   (m, first_state + 1) ===> substitution_machine "Y" "Z" success_state
 
+shiftr_machine_from0withZ ::StateInt -> StateInt -> Machine
+shiftr_machine_from0withZ success_state first_state =
+  HashMap.empty &
+  HashMap.insert (show first_state)
+                (
+                [newTransition "Z" "0" Program.Right (first_state + 3)
+                , newTransition "1" "0" Program.Right (first_state + 1)
+                , newTransition "0" "0" Program.Right (first_state + 2)]
+                )
+                &
+  HashMap.insert (show (first_state + 1))
+                (
+                [newTransition "1" "1" Program.Right (first_state + 1)
+                , newTransition "0" "1" Program.Right (first_state + 2)
+                , newTransition "Z" "1" Program.Right (first_state + 3)
+                , newTransition "." "1" Program.None (success_state)]
+                )
+                &
+  HashMap.insert (show (first_state + 2))
+                (
+                [newTransition "1" "0" Program.Right (first_state + 1)
+                , newTransition "0" "0" Program.Right (first_state + 2)
+                , newTransition "Z" "0" Program.Right (first_state + 3)
+                , newTransition "." "0" Program.None (success_state)]
+                )
+                &
+  HashMap.insert (show (first_state + 3))
+                (
+                [newTransition "1" "Z" Program.Right (first_state + 1)
+                , newTransition "0" "Z" Program.Right (first_state + 2)
+                , newTransition "Z" "Z" Program.Right (first_state + 3)
+                , newTransition "." "Z" Program.None (success_state)]
+                )
+ 
+
+shift_one_term_left_on_tape :: Direction -> Symbol -> StateInt -> StateInt -> Machine
+shift_one_term_left_on_tape dir symbol success_state first_state =
+  (first_state, 10) ==> find_first dir symbol (first_state + 1) & \m ->
+  (m, first_state + 1) ===> replace_first Program.Left "0" symbol (first_state + 2) & \m ->
+  (m, first_state + 2) ===> right_machine (first_state + 3) & \m ->
+  (m, first_state + 3) ===> replace_first Program.Right symbol "0" (first_state + 4) & \m ->
+  (m, first_state + 4) ===> find_first Program.Left symbol (first_state + 5) & \m ->
+  (m, first_state + 5) ===> find_first_until Program.Right "0" ["1"] (first_state + 6) success_state & \m ->
+  (m, first_state + 6) ===> shiftr_machine "Z" (first_state + 7) & \m ->
+  (m, first_state + 7) ===> find_first Program.Left "Z" (first_state + 8) & \m ->
+  (m, first_state + 8) ===> left_machine (first_state + 9) & \m ->
+  (m, first_state + 9) ===> shiftr_machine_from0withZ success_state
+
+
 step7 :: StateInt -> StateInt -> Machine
 step7 success_state first_state =
   (first_state, 8) ==> shift_one_term_right Program.Right "Y" (first_state + 1) & \m ->
@@ -295,7 +344,7 @@ step7 success_state first_state =
   (m, first_state + 3) ===> find_first_until Program.Right "1" ["0"] (first_state + 4) (first_state + 6) & \m ->
   (m, first_state + 4) ===> right_machine (first_state + 5) & \m ->
   (m, first_state + 5) ===> find_first_until Program.Right "1" ["0"] (first_state + 7) success_state & \m ->
-  (m, first_state + 6) ===> shift_one_term_left Program.Right "Z" success_state & \m ->
+  (m, first_state + 6) ===> shift_one_term_left_on_tape Program.Right "Z" success_state & \m ->
   (m, first_state + 7) ===> shift_one_term_right Program.Right "Z" success_state
 
 step8 :: StateInt -> StateInt -> Machine
