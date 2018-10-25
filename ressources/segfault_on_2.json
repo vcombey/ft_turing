@@ -1,0 +1,13 @@
+{
+	"name"    : "segfault_on_2",
+	"alphabet": [ "1", "2", "."],
+	"blank"   : ".",
+	"states"  : [ "scanright", "HALT" ],
+	"initial" : "scanright",
+	"finals"  : [ "HALT" ],
+	"transitions" : {
+		"scanright": [
+			{ "read" : "1", "to_state": "HALT", "write": "2", "action": "RIGHT"}
+		]
+	}
+}
