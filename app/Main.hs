@@ -13,16 +13,16 @@ import Generate
 
 universal = encodeFile "universal_turing_machine.json" Generate.universal
 
-parse_input file input on_success = ((decodeFileStrict file) :: IO (Maybe Program.Program)) >>=
+parse_input file input on_success = ((eitherDecodeFileStrict file) :: IO (Either String Program.Program)) >>=
        \decoded -> case decoded of
-         Just program -> 
+         Right program -> 
            let tape = Tape.fromString input in
            case (Program.check program) of
-             Left (mess) -> (putStrLn (Program.prettyProgram program) >> putStrLn ("bad program: " ++ mess))
+             Left mess -> (putStrLn (Program.prettyProgram program) >> putStrLn ("bad program: " ++ mess))
              Right () -> if not (Tape.check tape program)
                            then putStrLn "all char in initial tape don't belongs to (alphabet \\ blank)"
                            else on_success program tape
-         Nothing -> putStrLn "parsing error"
+         Left mess -> putStrLn mess
 
 encodeInputUTM file input  = 
     parse_input file input (\program tape -> putStrLn $ show (Program.transpileProgram program input))

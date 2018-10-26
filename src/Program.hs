@@ -45,6 +45,7 @@ instance FromJSON Direction where
     "LEFT" -> return Program.Left
     "RIGHT" -> return Program.Right
     "NONE" -> return Program.None
+    _ -> fail "unrecognize direction"
   
 type State = String
 
